@@ -111,3 +111,11 @@ This application uses [Material UI Theming](https://material-ui.com/customizatio
 ```sh
 $ architect deploy architect/auth -p THEME_PRIMARY_COLOR="#ff0000"
 ```
+
+### How do I configure the from address for outgoing emails?
+
+The SMTP from address can be configured by setting a valid email address to the parameter named `SMTP_FROM_ADDRESS`:
+
+```sh
+$ architect deploy architect/auth -p SMTP_FROM_ADDRESS="no-reply@domain.com"
+```

@@ -69,7 +69,7 @@ services:
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.SMTP_FROM_ADDRESS }}
       SERVE_PUBLIC_BASE_URL: ${{ environment.ingresses['architect/auth'].auth.url }}
       SERVE_ADMIN_BASE_URL: ${{ services.kratos.interfaces.admin.url }}
-      SELFSERVICE_WHITELISTED_RETURN_URLS: ${{ environment.ingresses['architect/auth'].auth.protocol }}://${{ environment.ingresses['architect/auth'].auth.host }}
+      SELFSERVICE_WHITELISTED_RETURN_URLS: ${{ environment.ingresses['architect/auth'].auth.url }}
       SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${{ environment.ingresses['architect/auth'].auth.url }}
       SELFSERVICE_FLOWS_LOGIN_UI_URL: ${{ environment.ingresses['architect/auth'].auth.url }}/login
       SELFSERVICE_FLOWS_REGISTRATION_UI_URL: ${{ environment.ingresses['architect/auth'].auth.url }}/signup
@@ -105,8 +105,8 @@ services:
       PGPORT: ${{ dependencies['architect/postgres'].interfaces.postgres.port }}
       PGUSER: ${{ dependencies['architect/postgres'].interfaces.postgres.username }}
       PGPASSWORD: ${{ dependencies['architect/postgres'].interfaces.postgres.password }}
-      URLS_SELF_ISSUER: ${{ environment.ingresses['architect/auth'].auth.protocol }}://${{ environment.ingresses['architect/auth'].auth.host }}
-      URLS_SELF_PUBLIC: ${{ environment.ingresses['architect/auth'].auth.protocol }}://${{ environment.ingresses['architect/auth'].auth.host }}
+      URLS_SELF_ISSUER: ${{ environment.ingresses['architect/auth'].auth.url }}
+      URLS_SELF_PUBLIC: ${{ environment.ingresses['architect/auth'].auth.url }}
       URLS_CONSENT: ${{ environment.ingresses['architect/auth'].auth.url }}/consent
       URLS_LOGIN: ${{ environment.ingresses['architect/auth'].auth.url }}/login
       URLS_LOGOUT: ${{ environment.ingresses['architect/auth'].auth.url }}/logout
