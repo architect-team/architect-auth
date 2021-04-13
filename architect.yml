@@ -91,7 +91,7 @@ services:
         echo "$GITHUB_SCHEMA_MAPPER" > $HOME/github.schema.jsonnet
         echo "$GITLAB_SCHEMA_MAPPER" > $HOME/gitlab.schema.jsonnet
         echo "$KRATOS_CONFIG" > $HOME/.kratos.yaml
-        [[ -n "$GITHUB_CLIENT_ID" ]] && yq eval -i '.selfservice.methods.oidc.config.providers += {"id": "github", "provider": "github", "client_id": "strenv(GITHUB_CLIENT_ID)", "client_secret": "strenv(GITHUB_CLIENT_SECRET)", "mapper_url": "file:///home/ory/github.schema.jsonnet", "scope": ["user:email"]}' $HOME/.kratos.yaml
+        [[ -n "$GITHUB_CLIENT_ID" ]] && yq eval -i '.selfservice.methods.oidc.config.providers += {"id": "github", "provider": "github", "client_id": env(GITHUB_CLIENT_ID), "client_secret": env(GITHUB_CLIENT_SECRET), "mapper_url": "file:///home/ory/github.schema.jsonnet", "scope": ["user:email"]}' $HOME/.kratos.yaml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.KRATOS_DB_NAME }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.KRATOS_DB_NAME }}')\gexec" | psql > /dev/null
         kratos migrate sql -e --yes
