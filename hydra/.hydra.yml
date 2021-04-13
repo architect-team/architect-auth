@@ -2,8 +2,6 @@ serve:
   public:
     cors:
       enabled: true
-      allowed_origins:
-        - http://*.localhost
       allowed_methods:
         - POST
         - GET
