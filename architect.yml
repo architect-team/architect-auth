@@ -173,4 +173,3 @@ interfaces:
   kratos-admin:
     url: ${{ services.kratos.interfaces.admin.url }}
     description: Administrative API for the Kratos service (https://ory.sh/kratos/)
-  mail: ${{ dependencies['architect/smtp-server'].interfaces.maildev.url }}
