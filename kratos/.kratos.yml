@@ -1,5 +1,4 @@
 version: v0.5.5-alpha.1
-
 hashers:
   argon2:
     parallelism: 1
@@ -7,10 +6,8 @@ hashers:
     iterations: 1
     salt_length: 16
     key_length: 16
-
 identity:
   default_schema_url: file:///home/ory/identity.schema.json
-
 selfservice:
   flows:
     settings:
@@ -19,44 +16,28 @@ selfservice:
         profile:
           hooks:
             - hook: verify
-
     login:
       lifespan: 10m
-
     verification:
       enabled: true
-
     registration:
       lifespan: 10m
       after:
         password:
           hooks:
             - hook: session
-
     recovery:
       enabled: true
       lifespan: 10m
-
   methods:
     password:
       enabled: true
-    # Uncomment the section below to enable the Github provider. This component allows you to
-    # make use of Architect component parameters to populate client IDs and secrets dynamically.
-    #
-    # oidc:
-    #   enabled: true
-    #   config:
-    #     providers:
-    #       - id: github
-    #         provider: github
-    #         client_id: ${{ parameters.GITHUB_CLIENT_ID }}
-    #         client_secret: ${{ parameters.GITHUB_CLIENT_SECRET }}
-    #         mapper_url: file:///home/ory/github.schema.jsonnet
-    #         scope:
-    #           - user:email
+    oidc:
+      enabled: true
+      config:
+        providers: []
     link:
       enabled: true
-
 serve:
   public:
     cors:

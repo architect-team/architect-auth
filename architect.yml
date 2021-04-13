@@ -78,6 +78,8 @@ services:
       SELFSERVICE_FLOWS_SETTINGS_UI_URL: ${{ environment.ingresses['architect/auth'].auth.url }}/settings
       SELFSERVICE_FLOWS_ERROR_UI_URL: ${{ environment.ingresses['architect/auth'].auth.url }}/error
       SECRETS_DEFAULT: ${{ parameters.SIGNING_SECRET }}
+      GITHUB_CLIENT_ID: ${{ parameters.GITHUB_CLIENT_ID }}
+      GITHUB_CLIENT_SECRET: ${{ parameters.GITHUB_CLIENT_SECRET }}
     interfaces:
       public: 4433
       admin: 4434
@@ -85,10 +87,11 @@ services:
       - sh
       - -c
       - |
-        echo "$KRATOS_CONFIG" > $HOME/.kratos.yaml
         echo "$DEFAULT_IDENTITY_SCHEMA" > $HOME/identity.schema.json
         echo "$GITHUB_SCHEMA_MAPPER" > $HOME/github.schema.jsonnet
         echo "$GITLAB_SCHEMA_MAPPER" > $HOME/gitlab.schema.jsonnet
+        echo "$KRATOS_CONFIG" > $HOME/.kratos.yaml
+        [[ -n "$GITHUB_CLIENT_ID" ]] && yq eval -i '.selfservice.methods.oidc.config.providers += {"id": "github", "provider": "github", "client_id": env(GITHUB_CLIENT_ID), "client_secret": env(GITHUB_CLIENT_SECRET), "mapper_url": "file:///home/ory/github.schema.jsonnet", "scope": ["user:email"]}' $HOME/.kratos.yaml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.KRATOS_DB_NAME }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.KRATOS_DB_NAME }}')\gexec" | psql > /dev/null
         kratos migrate sql -e --yes
