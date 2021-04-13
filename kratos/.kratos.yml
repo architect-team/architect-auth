@@ -40,20 +40,10 @@ selfservice:
   methods:
     password:
       enabled: true
-    # Uncomment the section below to enable the Github provider. This component allows you to
-    # make use of Architect component parameters to populate client IDs and secrets dynamically.
-    #
-    # oidc:
-    #   enabled: true
-    #   config:
-    #     providers:
-    #       - id: github
-    #         provider: github
-    #         client_id: ${{ parameters.GITHUB_CLIENT_ID }}
-    #         client_secret: ${{ parameters.GITHUB_CLIENT_SECRET }}
-    #         mapper_url: file:///home/ory/github.schema.jsonnet
-    #         scope:
-    #           - user:email
+    oidc:
+      enabled: true
+      config:
+        providers: []
     link:
       enabled: true
 
