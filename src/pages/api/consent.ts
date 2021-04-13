@@ -37,10 +37,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         access_token: {
           email: traits.email,
           email_verified: !!login_session.identity.verifiable_addresses.find(addr => addr.value === traits.email && addr.verified),
+          nickname: traits.username,
         },
         id_token: {
           email: traits.email,
           email_verified: !!login_session.identity.verifiable_addresses.find(addr => addr.value === traits.email && addr.verified),
+          nickname: traits.username,
         },
       },
     });

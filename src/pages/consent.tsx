@@ -29,7 +29,7 @@ export const getServerSideProps: GetServerSideProps<ConsentPageProps> = withIron
   try {
     const { data: consent_request } = await hydra_admin_client.getConsentRequest(query.consent_challenge);
 
-    if (consent_request.skip) {
+    if (consent_request.skip || ((consent_request.client.metadata as any).first_party || false)) {
       const { data: login_session } = await kratos_client.whoami(req.headers['cookie'], req.headers['Authorization']);
       const traits = login_session.identity.traits as any;
       const { data: accepted_request } = await hydra_admin_client.acceptConsentRequest(query.consent_challenge, {
@@ -41,10 +41,12 @@ export const getServerSideProps: GetServerSideProps<ConsentPageProps> = withIron
           access_token: {
             email: traits.email,
             email_verified: !!login_session.identity.verifiable_addresses.find(addr => addr.value === traits.email && addr.verified),
+            nickname: traits.username,
           },
           id_token: {
             email: traits.email,
             email_verified: !!login_session.identity.verifiable_addresses.find(addr => addr.value === traits.email && addr.verified),
+            nickname: traits.username,
           },
         }
       });
