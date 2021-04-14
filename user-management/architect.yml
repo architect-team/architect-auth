@@ -1,0 +1,134 @@
+name: architect/user-management
+description: User management system, complete with login and registration, powered by Ory Kratos
+keywords:
+  - users
+  - user-management
+  - login
+  - signup
+  - ory
+  - kratos
+
+dependencies:
+  architect/smtp-server: latest
+  architect/postgres: 13
+
+parameters:
+  LOG_LEVEL:
+    description: One of trace, debug, info, warning, error, fatal, or panic
+    default: error
+  DB_NAME:
+    description: Name of the database used to house the Kratos API contents
+    default: kratos
+  SESSION_COOKIE_NAME:
+    description: Name of the cookie that stores the auth application session
+    default: architect-auth
+  SIGNING_SECRET:
+    description: Secure key used for signing and encryption of cookies, sessions, and more
+    default: 61b2946b-fd55-4d92-ba6c-6d1fa24ce4d2
+  SMTP_FROM_ADDRESS:
+    description: From address for outgoing triggered emails
+    default: no-reply@architect.io
+  GITHUB_CLIENT_ID:
+    description: Client ID of a Github application that can request to act on behalf of users (does nothing unless you enable OIDC in ./kratos/.kratos.yml)
+    required: false
+  GITHUB_CLIENT_SECRET:
+    description: Client secret of a Github application that can request to act on behalf of users (does nothing unless you enable OIDC in ./kratos/.kratos.yml)
+    required: false
+  LOGO_URL:
+    description: URL of an image to be rendered as the logo on the authorization web pages
+    default: /platform-icon.png
+  APP_NAME:
+    description: Name of the application users are authenticating with
+    default: Architect Cloud
+  THEME_PRIMARY_COLOR:
+    description: A hex color to be used as the primary theme color for the application
+    required: false
+
+services:
+  kratos:
+    build:
+      context: ./kratos/
+    environment:
+      KRATOS_CONFIG: file:./kratos/.kratos.yml
+      LOG_LEVEL: ${{ parameters.LOG_LEVEL }}
+      DEFAULT_IDENTITY_SCHEMA: file:./kratos/identity.schema.json
+      GITHUB_SCHEMA_MAPPER: file:./kratos/github.schema.jsonnet
+      GITLAB_SCHEMA_MAPPER: file:./kratos/gitlab.schema.jsonnet
+      DSN: ${{ dependencies['architect/postgres'].interfaces.postgres.url }}/${{ parameters.DB_NAME }}?sslmode=disable
+      COURIER_SMTP_CONNECTION_URI: ${{ dependencies['architect/smtp-server'].interfaces.smtp.url }}
+      COURIER_SMTP_FROM_ADDRESS: ${{ parameters.SMTP_FROM_ADDRESS }}
+      SERVE_PUBLIC_BASE_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}
+      SERVE_ADMIN_BASE_URL: ${{ services.kratos.interfaces.admin.url }}
+      SELFSERVICE_WHITELISTED_RETURN_URLS: ${{ environment.ingresses['architect/user-management'].frontend.url }}
+      SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}
+      SELFSERVICE_FLOWS_LOGIN_UI_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}/login
+      SELFSERVICE_FLOWS_REGISTRATION_UI_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}/signup
+      SELFSERVICE_FLOWS_VERIFICATION_UI_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}/verify
+      SELFSERVICE_FLOWS_RECOVERY_UI_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}/recovery
+      SELFSERVICE_FLOWS_SETTINGS_UI_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}/settings
+      SELFSERVICE_FLOWS_ERROR_UI_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}/error
+      SECRETS_DEFAULT: ${{ parameters.SIGNING_SECRET }}
+      GITHUB_CLIENT_ID: ${{ parameters.GITHUB_CLIENT_ID }}
+      GITHUB_CLIENT_SECRET: ${{ parameters.GITHUB_CLIENT_SECRET }}
+
+      # Used by the psql client during startup
+      PGHOST: ${{ dependencies['architect/postgres'].interfaces.postgres.host }}
+      PGPORT: ${{ dependencies['architect/postgres'].interfaces.postgres.port }}
+      PGUSER: ${{ dependencies['architect/postgres'].interfaces.postgres.username }}
+      PGPASSWORD: ${{ dependencies['architect/postgres'].interfaces.postgres.password }}
+    interfaces:
+      public: 4433
+      admin: 4434
+    command:
+      - sh
+      - -c
+      - |
+        export ALLOWED_ORIGINS=$$(echo '${{ environment.ingresses }}' | jq -r '.[][].url')
+        export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=$ALLOWED_ORIGINS
+        export SERVE_ADMIN_CORS_ALLOWED_ORIGINS=$ALLOWED_ORIGINS
+        echo "$DEFAULT_IDENTITY_SCHEMA" > $HOME/identity.schema.json
+        echo "$GITHUB_SCHEMA_MAPPER" > $HOME/github.schema.jsonnet
+        echo "$GITLAB_SCHEMA_MAPPER" > $HOME/gitlab.schema.jsonnet
+        echo "$KRATOS_CONFIG" > $HOME/.kratos.yaml
+        [[ -n "$GITHUB_CLIENT_ID" ]] && yq eval -i '.selfservice.methods.oidc.config.providers += {"id": "github", "provider": "github", "client_id": env(GITHUB_CLIENT_ID), "client_secret": env(GITHUB_CLIENT_SECRET), "mapper_url": "file:///home/ory/github.schema.jsonnet", "scope": ["user:email"]}' $HOME/.kratos.yaml
+        sleep 5
+        echo "SELECT 'CREATE DATABASE ${{ parameters.DB_NAME }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.DB_NAME }}')\gexec" | psql > /dev/null
+        kratos migrate sql -e --yes
+        kratos serve --dev
+
+  app:
+    build:
+      context: ./
+    environment:
+      BASE_URL: ${{ environment.ingresses['architect/user-management'].frontend.url }}
+      LOG_LEVEL: ${{ parameters.LOG_LEVEL }}
+      KRATOS_ADMIN_URL: ${{ services.kratos.interfaces.admin.url }}
+      KRATOS_PUBLIC_URL: ${{ services.kratos.interfaces.public.url }}
+      KRATOS_BROWSER_URL: ${{ environment.ingresses['architect/user-management'].kratos-public.url }}
+      SIGNING_SECRET: ${{ parameters.SIGNING_SECRET }}
+      SESSION_COOKIE_NAME: ${{ parameters.SESSION_COOKIE_NAME }}
+      LOGO_URL: ${{ parameters.LOGO_URL }}
+      APP_NAME: ${{ parameters.APP_NAME }}
+      THEME_PRIMARY_COLOR: ${{ parameters.THEME_PRIMARY_COLOR }}
+    interfaces:
+      main: 3000
+    debug:
+      build:
+        args:
+          DEBUG: 'true'
+      command: npm run dev
+      volumes:
+        src:
+          host_path: ./src/
+          mount_path: /app/src/
+
+interfaces:
+  frontend:
+    url: ${{ services.app.interfaces.main.url }}
+    description: Webapp allowing users to signup, register, and manage their profile
+  kratos-public:
+    url: ${{ services.kratos.interfaces.public.url }}
+    description: Public endpoints for the Kratos service (https://ory.sh/kratos/)
+  kratos-admin:
+    url: ${{ services.kratos.interfaces.admin.url }}
+    description: Administrative endpoints for the Kratos service (https://ory.sh/kratos/)

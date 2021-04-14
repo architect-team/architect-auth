@@ -1,21 +1,45 @@
 import { Component, Vue } from 'nuxt-property-decorator';
+import { Context } from '@nuxt/types';
+import { Configuration, LoginFlow, PublicApi } from '@oryd/kratos-client';
+import FormWrapper from '../components/form-wrapper';
 
 @Component
 export default class LoginPage extends Vue {
-  asyncData(ctx: any) {
-    if (!ctx.query.flow) {
-      return ctx.error({
+  flow!: LoginFlow;
+
+  async asyncData({ query, error }: Context) {
+    if (!query.flow) {
+      return error({
         statusCode: 400,
-        message: 'Test'
+        message: 'Login flow not initialized',
       });
     }
 
-    return {};
+    const kratos_client = new PublicApi(
+      new Configuration({
+        basePath: process.env.KRATOS_PUBLIC_URL,
+      })
+    );
+
+    try {
+      const res = await kratos_client.getSelfServiceLoginFlow(
+        String(query.flow)
+      );
+      return { flow: res.data };
+    } catch (err) {
+      return error({
+        statusCode: 500,
+        message: 'Invalid login flow ID',
+      });
+    }
   }
 
   render() {
     return (
-      <div>test</div>
-    )
+      <FormWrapper
+        title="Welcome back"
+        subtitle={`Log in below to continue to ${process.env.APP_NAME}`}
+      ></FormWrapper>
+    );
   }
 }
