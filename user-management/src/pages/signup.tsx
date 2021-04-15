@@ -7,8 +7,16 @@ import KratosForm from '~/components/kratos-form';
 @Component
 export default class SignupPage extends Vue {
   flow!: RegistrationFlow;
+  return_to!: string;
 
-  async asyncData({ query, error }: Context) {
+  async asyncData({ query, req, redirect, error }: Context) {
+    // If we have a return_to address, store it and initiate login flow
+    if (query.return_to) {
+      req.session.return_to = query.return_to;
+      return redirect(`${process.env.NUXT_ENV_KRATOS_BROWSER_URL}/self-service/registration/browser?return_to=${req.session.return_to}`);
+    }
+
+    // If we don't have a return_to or flow parameter, something is wrong
     if (!query.flow) {
       return error({
         statusCode: 400,
@@ -26,7 +34,10 @@ export default class SignupPage extends Vue {
       const res = await kratos_client.getSelfServiceRegistrationFlow(
         String(query.flow)
       );
-      return { flow: res.data };
+      return {
+        flow: res.data,
+        return_to: req.session.return_to,
+      };
     } catch (err) {
       return error({
         statusCode: 500,
@@ -61,7 +72,7 @@ export default class SignupPage extends Vue {
 
         <v-row class="mt-0">
           <v-col>
-            <a href={`${process.env.NUXT_ENV_KRATOS_BROWSER_URL}/self-service/login/browser`}>
+            <a href={`${process.env.NUXT_ENV_KRATOS_BROWSER_URL}/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
               Already have an account? Log in.
             </a>
           </v-col>

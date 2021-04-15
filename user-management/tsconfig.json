@@ -29,6 +29,10 @@
       "@nuxtjs/axios",
       "@nuxtjs/vuetify",
       "@types/node"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
     ]
   },
   "exclude": [

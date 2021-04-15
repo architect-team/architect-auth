@@ -1,11 +1,15 @@
 import colors from 'vuetify/es5/util/colors';
 
-export default {
+const config = {
   srcDir: 'src/',
 
   server: {
     host: '0.0.0.0',
   },
+
+  serverMiddleware: [
+    '~/session-middleware',
+  ],
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -67,3 +71,5 @@ export default {
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {},
 };
+
+export default config;
