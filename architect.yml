@@ -35,10 +35,10 @@ parameters:
     default: no-reply@architect.io
   GITHUB_CLIENT_ID:
     description: Client ID of a Github application that can request to act on behalf of users (does nothing unless you enable OIDC in ./kratos/.kratos.yml)
-    required: false
+    required: 'false'
   GITHUB_CLIENT_SECRET:
     description: Client secret of a Github application that can request to act on behalf of users (does nothing unless you enable OIDC in ./kratos/.kratos.yml)
-    required: false
+    required: 'false'
   LOGO_URL:
     description: URL of an image to be rendered as the logo on the authorization web pages
     default: /platform-icon.png
@@ -47,7 +47,7 @@ parameters:
     default: Architect Cloud
   THEME_PRIMARY_COLOR:
     description: A hex color to be used as the primary theme color for the application
-    required: false
+    required: 'false'
 
 services:
   hydra:
