@@ -12,7 +12,7 @@ keywords:
 
 dependencies:
   architect/smtp-server: latest
-  architect/postgres: 13
+  architect/postgres: '13'
 
 parameters:
   LOG_LEVEL:
