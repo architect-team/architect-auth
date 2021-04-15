@@ -1,0 +1,25 @@
+name: Register component
+
+env:
+  ARCHITECT_EMAIL: ${{ secrets.ARCHITECT_ACCT_EMAIL }} # pass secrets into a job from Github > Settings > Secrets
+  ARCHITECT_PASSWORD: ${{ secrets.ARCHITECT_ACCT_PASSWORD }}
+  ARCHITECT_ACCOUNT: architect
+  MAINLINE_TAG_NAME: latest
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  architect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+      - name: Install Architect CLI
+        run: npm install -g @architect-io/cli
+      - name: Login to Architect Cloud
+        run: architect login
+      - name: Tag and Register Component
+        run: architect register ./architect.yml --tag ${{ env.MAINLINE_TAG_NAME }}
