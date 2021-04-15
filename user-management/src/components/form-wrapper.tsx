@@ -15,7 +15,7 @@ export default class FormWrapper extends VueComponent<Props> {
   @Prop({ required: false, default: '' })
   readonly subtitle!: string;
 
-  @Prop({ default: process.env.LOGO_URL })
+  @Prop({ default: process.env.NUXT_ENV_LOGO_URL })
   readonly img_src!: string;
 
   render() {

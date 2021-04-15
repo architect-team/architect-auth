@@ -1,18 +1,18 @@
 import { Context } from '@nuxt/types';
-import { Configuration, LoginFlow, PublicApi } from '@oryd/kratos-client';
+import { Configuration, PublicApi, RegistrationFlow } from '@oryd/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
 import KratosForm from '~/components/kratos-form';
 
 @Component
-export default class LoginPage extends Vue {
-  flow!: LoginFlow;
+export default class SignupPage extends Vue {
+  flow!: RegistrationFlow;
 
   async asyncData({ query, error }: Context) {
     if (!query.flow) {
       return error({
         statusCode: 400,
-        message: 'Login flow not initialized',
+        message: 'Signup flow not initialized',
       });
     }
 
@@ -23,14 +23,14 @@ export default class LoginPage extends Vue {
     );
 
     try {
-      const res = await kratos_client.getSelfServiceLoginFlow(
+      const res = await kratos_client.getSelfServiceRegistrationFlow(
         String(query.flow)
       );
       return { flow: res.data };
     } catch (err) {
       return error({
         statusCode: 500,
-        message: 'Invalid login flow ID',
+        message: 'Invalid signup flow ID',
       });
     }
   }
@@ -50,8 +50,8 @@ export default class LoginPage extends Vue {
 
     return (
       <FormWrapper
-        title="Welcome back"
-        subtitle={`Log in below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
+        title="Welcome"
+        subtitle={`Sign up below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
       >
         {(this.flow.messages || []).map((message, index) => (
           <v-alert key={index} type={message.type} class="my-2">{message.text}</v-alert>
@@ -61,11 +61,8 @@ export default class LoginPage extends Vue {
 
         <v-row class="mt-0">
           <v-col>
-            <a href="/recovery">Forgot password?</a>
-          </v-col>
-          <v-col>
-            <a href={`${process.env.NUXT_ENV_KRATOS_BROWSER_URL}/self-service/registration/browser`}>
-              Don't have an account? Sign up.
+            <a href={`${process.env.NUXT_ENV_KRATOS_BROWSER_URL}/self-service/login/browser`}>
+              Already have an account? Log in.
             </a>
           </v-col>
         </v-row>

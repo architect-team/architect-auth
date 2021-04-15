@@ -104,12 +104,12 @@ services:
       LOG_LEVEL: ${{ parameters.LOG_LEVEL }}
       KRATOS_ADMIN_URL: ${{ services.kratos.interfaces.admin.url }}
       KRATOS_PUBLIC_URL: ${{ services.kratos.interfaces.public.url }}
-      KRATOS_BROWSER_URL: ${{ environment.ingresses['architect/user-management'].kratos-public.url }}
       SIGNING_SECRET: ${{ parameters.SIGNING_SECRET }}
       SESSION_COOKIE_NAME: ${{ parameters.SESSION_COOKIE_NAME }}
-      LOGO_URL: ${{ parameters.LOGO_URL }}
-      APP_NAME: ${{ parameters.APP_NAME }}
       THEME_PRIMARY_COLOR: ${{ parameters.THEME_PRIMARY_COLOR }}
+      NUXT_ENV_LOGO_URL: ${{ parameters.LOGO_URL }}
+      NUXT_ENV_APP_NAME: ${{ parameters.APP_NAME }}
+      NUXT_ENV_KRATOS_BROWSER_URL: ${{ environment.ingresses['architect/user-management'].kratos-public.url }}
     interfaces:
       main: 3000
     debug:
