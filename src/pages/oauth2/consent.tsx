@@ -4,11 +4,78 @@ import { PublicApi as KratosPublicApi } from '@oryd/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
 
+const submitHandler = async ({ req, redirect, error }: Context) => {
+  if (!req.body?.challenge) {
+    return error({
+      statusCode: 400,
+      message: 'Missing consent challenge',
+    });
+  }
+
+  const challenge = String(req.body.challenge);
+
+  try {
+    const hydra_admin_client = new HydraAdminApi({ basePath: process.env.HYDRA_ADMIN_URL });
+    const kratos_client = new KratosPublicApi({ basePath: process.env.KRATOS_PUBLIC_URL });
+
+    if (req.body.submit === 'deny') {
+      const { data: rejected_request } = await hydra_admin_client.rejectConsentRequest(challenge);
+      return redirect(rejected_request.redirect_to);
+    }
+
+    let grant_scope = Array.isArray(req.body.grant_scope)
+      ? req.body.grant_scope
+      : [req.body.grant_scope];
+
+    const { data: consent_request } = await hydra_admin_client.getConsentRequest(challenge);
+    const { data: login_session } = await kratos_client.whoami(String(req.headers.cookie), String(req.headers.authorization));
+    const traits = login_session.identity.traits as any;
+    const { data: accepted_request } = await hydra_admin_client.acceptConsentRequest(challenge, {
+      grant_scope,
+      grant_access_token_audience: consent_request.requested_access_token_audience,
+      remember: Boolean(req.body.remember),
+      remember_for: 0,
+      session: {
+        access_token: {
+          email: traits.email,
+          email_verified: !!(login_session.identity.verifiable_addresses || []).find(addr => addr.value === traits.email && addr.verified),
+          nickname: traits.username,
+        },
+        id_token: {
+          email: traits.email,
+          email_verified: !!(login_session.identity.verifiable_addresses || []).find(addr => addr.value === traits.email && addr.verified),
+          nickname: traits.username,
+        },
+      },
+    });
+    return redirect(accepted_request.redirect_to);
+  } catch (err) {
+    if (err.response?.data?.error) {
+      return error({
+        statusCode: err.response.data.error.code,
+        message: err.response.data.error.message
+      });
+    } else {
+      return error({
+        statusCode: 500,
+        message: 'An unknown error has occurred',
+      });
+    }
+  }
+};
+
 @Component
 export default class ConsentPage extends Vue {
   consent_request!: ConsentRequest;
 
-  async asyncData({ query, req, redirect, error }: Context) {
+  async asyncData(ctx: Context) {
+    const { query, req, redirect, error } = ctx;
+
+    // If this is a post request, consider it a form submit
+    if (req.method === 'POST') {
+      return submitHandler(ctx);
+    }
+
     if (!query.consent_challenge) {
       return error({
         statusCode: 400,
@@ -86,7 +153,7 @@ export default class ConsentPage extends Vue {
         }, wants to act on your behalf with the following access:`}
         {...(client?.logo_uri ? { imgSrc: client.logo_uri } : {})}
       >
-        <form method="POST" action="/api/consent">
+        <form method="POST">
           <input type="hidden" name="challenge" value={challenge} />
 
           {(requested_scope || []).map((scope: any) => (

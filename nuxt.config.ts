@@ -7,7 +7,10 @@ const config = {
     host: '0.0.0.0',
   },
 
-  serverMiddleware: ['~/server-middleware/session'],
+  serverMiddleware: [
+    '~/server-middleware/session',
+    '~/server-middleware/body-parser',
+  ],
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
