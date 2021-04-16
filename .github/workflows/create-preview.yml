@@ -25,4 +25,4 @@ jobs:
       - name: Create env if not exists
         run: architect environment:create auth-${{ env.PREVIEW_TAG }} -a ${{ env.ACCOUNT_NAME }} --platform ${{ env.PREVIEW_PLATFORM }} || exit 0
       - name: Deploy component
-        run: architect deploy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e auth-${{ env.PREVIEW_TAG }} architect/auth:${{ env.PREVIEW_TAG }}
+        run: architect deploy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e auth-${{ env.PREVIEW_TAG }} architect/auth:${{ env.PREVIEW_TAG }} -i auth:frontend -i hydra-admin:hydra-admin
