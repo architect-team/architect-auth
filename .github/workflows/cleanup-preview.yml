@@ -7,16 +7,20 @@ on:
     types:
       - closed
 
+env:
+  ACCOUNT_NAME: architect
+  PREVIEW_ENV_NAME: auth-preview-${{ github.head_ref }}
+
 jobs:
   architect_destroy_preview:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v1
-      - name: Architect Destroy Preview
-        uses: architect-team/destroy-preview@v1.0.1
-        with:
-          email: ${{ secrets.ARCHITECT_ACCT_EMAIL }}
-          password: ${{ secrets.ARCHITECT_ACCT_PASSWORD }}
-          account: architect
-          environment: auth-preview-${{ github.head_ref }}
-          component_name: architect-auth
+      - name: Install Architect CLI
+        run: npm install -g @architect-io/cli
+      - name: Login to Architect Cloud
+        run: architect login -e ${{ secrets.ARCHITECT_ACCT_EMAIL }} -p ${{ secrets.ARCHITECT_ACCT_PASSWORD }}
+      - name: Clear the environment
+        run: architect destroy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e ${{ env.PREVIEW_ENV_NAME }}
+      - name: Cleanup the environment
+        run: architect env:destroy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e ${{ env.PREVIEW_ENV_NAME }}
