@@ -1,104 +1,89 @@
-import { Link, makeStyles } from '@material-ui/core';
-import { Alert, Color } from '@material-ui/lab';
-import { PublicApi as KratosPublicApi, RegistrationFlow } from '@oryd/kratos-client';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import React from 'react';
-import FormWrapper from '../components/form-wrapper';
-import KratosForm from '../components/kratos-form';
-import withIronSession from '../middleware/with-iron-session';
-import { BasePageProps } from '../page-props';
+import { Context } from '@nuxt/types';
+import { Configuration, PublicApi, RegistrationFlow } from '@oryd/kratos-client';
+import { Component, Vue } from 'nuxt-property-decorator';
+import FormWrapper from '~/components/form-wrapper';
+import KratosForm from '~/components/kratos-form';
 
-interface SignupPageProps extends BasePageProps {
-  return_to: string;
-  flow?: RegistrationFlow;
-}
+@Component
+export default class SignupPage extends Vue {
+  flow!: RegistrationFlow;
+  return_to!: string;
 
-export const getServerSideProps: GetServerSideProps<SignupPageProps> = withIronSession(async ({ req, query }) => {
-  if (!query.flow) {
-    return {
-      error: {
+  async asyncData({ query, req, redirect, error }: Context) {
+    // If we have a return_to address, store it and initiate login flow
+    if (query.return_to) {
+      req.session.return_to = query.return_to;
+      return redirect(`/self-service/registration/browser?return_to=${req.session.return_to}`);
+    }
+
+    // If we don't have a return_to or flow parameter, something is wrong
+    if (!query.flow) {
+      return error({
         statusCode: 400,
-        message: 'Invalid session ID',
-      },
+        message: 'Signup flow not initialized',
+      });
     }
-  }
 
-  try {
-    const kratos_client = new KratosPublicApi({ basePath: process.env.NEXT_PUBLIC_BASE_URL });
-    const res = await kratos_client.getSelfServiceRegistrationFlow(String(query.flow));
-    return {
-      props: {
-        return_to: req.session.get('return_to'),
+    const kratos_client = new PublicApi(
+      new Configuration({
+        basePath: process.env.KRATOS_PUBLIC_URL,
+      })
+    );
+
+    try {
+      const res = await kratos_client.getSelfServiceRegistrationFlow(String(query.flow));
+      return {
         flow: res.data,
-      }
+        return_to: req.session.return_to,
+      };
+    } catch (err) {
+      return error({
+        statusCode: 500,
+        message: 'Invalid signup flow ID',
+      });
     }
-  } catch (err) {
-    return {
-      props: {
-        error: {
-          statusCode: err.response.data.error.code,
-          message: err.response.data.error.message,
-        },
-      }
-    };
-  }
-});
-
-const useStyles = makeStyles(theme => ({
-  card: {
-    marginTop: theme.spacing(8),
-    marginBottom: theme.spacing(4),
-  },
-
-  logo: {
-    maxWidth: 150,
-    display: 'inline-block',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-
-  alert: {
-    textAlign: 'left',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  }
-}));
-
-const SignupPage = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const classes = useStyles();
-
-  const sorted_methods = [];
-  const { password, oidc, ...methods } = props.flow.methods;
-  if (password) {
-    sorted_methods.push(password);
   }
 
-  if (oidc) {
-    sorted_methods.push(oidc);
-  }
+  render() {
+    const sorted_methods = [];
+    const { password, oidc, ...methods } = this.flow.methods;
+    if (password) {
+      sorted_methods.push(password);
+    }
 
-  sorted_methods.push(...Object.values(methods));
+    if (oidc) {
+      sorted_methods.push(oidc);
+    }
 
-  return (
-    <>
+    sorted_methods.push(...Object.values(methods));
+
+    return (
       <FormWrapper
         title="Welcome"
-        subtitle={`Sign up below to continue to ${process.env.NEXT_PUBLIC_APP_NAME}`}
+        subtitle={`Sign up below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
       >
-        {(props.flow.messages || []).map((message, index) => (
-          <Alert key={index} severity={message.type as Color} className={classes.alert}>{message.text}</Alert>
+        {(this.flow.messages || []).map((message, index) => (
+          <v-alert key={index} type={message.type} text class="mb-4">
+            {message.text}
+          </v-alert>
         ))}
 
-        {sorted_methods.map((method, index) => <KratosForm key={index} buttonPrefix="Sign up with" config={method.config} method={method.method} divider={index + 1 < sorted_methods.length} />)}
+        {sorted_methods.map((method, index) => (
+          <KratosForm
+            config={method.config}
+            method={method.method}
+            divider={index + 1 < sorted_methods.length}
+          />
+        ))}
+
+        <v-row class="mt-0">
+          <v-col>
+            <a href={`/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
+              Already have an account? Log in.
+            </a>
+          </v-col>
+        </v-row>
       </FormWrapper>
-
-      <div style={{ textAlign: 'center' }}>
-        <Link href={`/self-service/login/browser?return_to=${encodeURIComponent(props.return_to)}`} variant="body2">
-          Already have an account? Log in.
-        </Link>
-      </div>
-    </>
-  )
-};
-
-export default SignupPage;
+    );
+  }
+}

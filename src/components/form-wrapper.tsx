@@ -1,55 +1,42 @@
-import { Card, CardContent, makeStyles, Typography } from '@material-ui/core';
-import React from 'react';
+import { Component, Prop } from 'nuxt-property-decorator';
+import { VueComponent } from '~/vue-component';
 
-interface FormWrapperProps {
-  title: string,
+interface Props {
+  title: string;
   subtitle?: string;
-  imgSrc?: string;
+  img_src?: string;
 }
 
-const useStyles = makeStyles(theme => ({
-  card: {
-    marginTop: theme.spacing(8),
-    marginBottom: theme.spacing(2),
-    textAlign: 'center',
-  },
+@Component
+export default class FormWrapper extends VueComponent<Props> {
+  @Prop({ required: true })
+  readonly title!: string;
 
-  logo: {
-    maxWidth: 150,
-    display: 'inline-block',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
+  @Prop({ required: false, default: '' })
+  readonly subtitle!: string;
 
-  content: {
-    marginTop: theme.spacing(1),
-    textAlign: 'left',
+  @Prop({ default: process.env.NUXT_ENV_LOGO_URL })
+  readonly img_src!: string;
+
+  render() {
+    return (
+      <v-card outlined class="mt-8 mb-2 text-center">
+        <v-card-text>
+          <img
+            src={this.img_src}
+            alt={process.env.APP_NAME}
+            class="my-2"
+            style={{
+              maxWidth: '150px',
+              display: 'inline-block',
+            }}
+          />
+
+          <v-card-title class="d-block">{this.title}</v-card-title>
+          {this.subtitle && <v-card-subtitle class="text-center">{this.subtitle}</v-card-subtitle>}
+        </v-card-text>
+        <v-card-text class="pt-0">{this.$slots.default}</v-card-text>
+      </v-card>
+    );
   }
-}))
-
-const FormWrapper = (props: React.PropsWithChildren<FormWrapperProps>) => {
-  const classes = useStyles();
-
-  return (
-    <Card variant="outlined" className={classes.card}>
-      <CardContent>
-        <img src={props.imgSrc} alt={process.env.NEXT_PUBLIC_APP_NAME} className={classes.logo} />
-
-        <Typography variant="h5" color="textPrimary">{props.title}</Typography>
-        {props.subtitle && (
-          <Typography variant="body1" color="textSecondary">{props.subtitle}</Typography>
-        )}
-
-        <div className={classes.content}>
-          {props.children}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-FormWrapper.defaultProps = {
-  imgSrc: process.env.NEXT_PUBLIC_LOGO_URL
-};
-
-export default FormWrapper;
+}

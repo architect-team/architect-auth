@@ -5,18 +5,24 @@ on:
     branches:
       - master
 
+env:
+  ACCOUNT_NAME: architect
+  PREVIEW_PLATFORM: public
+  PREVIEW_TAG: preview-${{ github.head_ref }}
+
 jobs:
   architect_create_preview:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
-      - name: Architect Create Preview
-        uses: architect-team/create-preview@v1.0.1
-        with:
-          email: ${{ secrets.ARCHITECT_ACCT_EMAIL }}
-          password: ${{ secrets.ARCHITECT_ACCT_PASSWORD }}
-          account: architect
-          platform: public
-          environment: auth-preview-${{ github.head_ref }}
-          component_name: architect-auth
+      - name: Install Architect CLI
+        run: npm install -g @architect-io/cli
+      - name: Login to Architect Cloud
+        run: architect login -e ${{ secrets.ARCHITECT_ACCT_EMAIL }} -p ${{ secrets.ARCHITECT_ACCT_PASSWORD }}
+      - name: Register component w/ Architect
+        run: architect register ./architect.yml -t ${{ env.PREVIEW_TAG }}
+      - name: Create env if not exists
+        run: architect environment:create auth-${{ env.PREVIEW_TAG }} -a ${{ env.ACCOUNT_NAME }} --platform ${{ env.PREVIEW_PLATFORM }} || exit 0
+      - name: Deploy component
+        run: architect deploy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e auth-${{ env.PREVIEW_TAG }} architect/auth:${{ env.PREVIEW_TAG }} -i auth:frontend -i hydra-admin:hydra-admin

@@ -1,89 +1,72 @@
-import { Link, makeStyles } from '@material-ui/core';
-import { Alert, Color } from '@material-ui/lab';
-import { PublicApi as KratosPublicApi, RecoveryFlow } from '@oryd/kratos-client';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import React from 'react';
-import FormWrapper from '../components/form-wrapper';
-import KratosForm from '../components/kratos-form';
-import { BasePageProps } from '../page-props';
+import { Context } from '@nuxt/types';
+import { Configuration, PublicApi, RecoveryFlow } from '@oryd/kratos-client';
+import { Component } from 'vue-property-decorator';
+import { VueComponent } from '~/vue-component';
+import FormWrapper from '~/components/form-wrapper';
+import KratosForm from '~/components/kratos-form';
 
-interface RecoverPageProps extends BasePageProps {
-  flow?: RecoveryFlow;
-}
+@Component
+export default class RecoverPage extends VueComponent<any> {
+  flow!: RecoveryFlow;
+  return_to!: string;
 
-export const getServerSideProps: GetServerSideProps<RecoverPageProps> = async ({ query }) => {
-  if (!query.flow) {
-    return {
-      redirect: {
-        destination: '/self-service/recovery/browser',
-        permanent: false,
-      },
-    };
-  }
+  async asyncData({ query, req, redirect, error }: Context) {
+    // If we have a return_to address, store it and initiate login flow
+    if (query.return_to) {
+      req.session.return_to = query.return_to;
+      return redirect(`/self-service/recovery/browser?return_to=${req.session.return_to}`);
+    }
 
-  const kratos_client = new KratosPublicApi({ basePath: process.env.NEXT_PUBLIC_BASE_URL });
+    // If we don't have a return_to or flow parameter, something is wrong
+    if (!query.flow) {
+      return error({
+        statusCode: 400,
+        message: 'Recovery flow not initialized',
+      });
+    }
 
-  try {
-    const res = await kratos_client.getSelfServiceRecoveryFlow(String(query.flow));
-    return {
-      props: {
+    const kratos_client = new PublicApi(
+      new Configuration({
+        basePath: process.env.KRATOS_PUBLIC_URL,
+      })
+    );
+
+    try {
+      const res = await kratos_client.getSelfServiceRecoveryFlow(String(query.flow));
+      return {
         flow: res.data,
-      },
-    };
-  } catch (err) {
-    return {
-      props: {
-        error: {
-          statusCode: err.response.data.error.code,
-          message: err.response.data.error.message,
-        },
-      }
-    };
+        return_to: req.session.return_to,
+      };
+    } catch (err) {
+      return error({
+        statusCode: 500,
+        message: 'Invalid recovery flow ID',
+      });
+    }
   }
-};
 
-const useStyles = makeStyles(theme => ({
-  card: {
-    marginTop: theme.spacing(8),
-    marginBottom: theme.spacing(4),
-  },
-
-  logo: {
-    maxWidth: 150,
-    display: 'inline-block',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-
-  alert: {
-    textAlign: 'left',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  }
-}));
-
-const RecoveryPage = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const classes = useStyles();
-
-  return (
-    <>
-      <FormWrapper title="Forgot your password?" subtitle="Enter your email address and we will send you instructions to reset your password">
-        {(props.flow.messages || []).map((message, index) => (
-          <Alert key={index} severity={message.type as Color} className={classes.alert}>{message.text}</Alert>
+  render() {
+    return (
+      <FormWrapper
+        title="Forgot your password?"
+        subtitle="Enter your email address and we will send you instructions to reset your password"
+      >
+        {(this.flow.messages || []).map((message, index) => (
+          <v-alert key={index} type={message.type} text class="mb-4">
+            {message.text}
+          </v-alert>
         ))}
 
-        {Object.values(props.flow.methods || {}).map((method, index) => (
-          <KratosForm key={index} config={method.config} method={method.method} />
+        {Object.values(this.flow.methods || {}).map((method) => (
+          <KratosForm config={method.config} method={method.method} />
         ))}
+
+        <div class="text-center">
+          <a href={`/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
+            Back to login
+          </a>
+        </div>
       </FormWrapper>
-
-      <div style={{ textAlign: 'center' }}>
-        <Link href="/login" variant="body2" style={{ textAlign: 'center' }}>
-          Back to login
-        </Link>
-      </div>
-    </>
-  )
-};
-
-export default RecoveryPage;
+    );
+  }
+}

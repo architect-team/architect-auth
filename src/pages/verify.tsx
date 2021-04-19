@@ -1,91 +1,78 @@
-import { Button, makeStyles } from '@material-ui/core';
-import { Alert, Color } from '@material-ui/lab';
-import { PublicApi as KratosPublicApi, VerificationFlow } from '@oryd/kratos-client';
-import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
-import React from 'react';
-import FormWrapper from '../components/form-wrapper';
-import KratosForm from '../components/kratos-form';
-import withIronSession from '../middleware/with-iron-session';
-import { BasePageProps } from '../page-props';
+import { Context } from '@nuxt/types';
+import { Configuration, PublicApi, VerificationFlow } from '@oryd/kratos-client';
+import { Vue, Component } from 'nuxt-property-decorator';
+import FormWrapper from '~/components/form-wrapper';
+import KratosForm from '~/components/kratos-form';
 
-interface VerifyPageProps extends BasePageProps {
-  return_to?: string;
-  flow?: VerificationFlow;
-}
+@Component
+export default class VerifyPage extends Vue {
+  flow!: VerificationFlow;
+  return_to!: string;
 
-export const getServerSideProps: GetServerSideProps<VerifyPageProps> = withIronSession(async ({ req, query }) => {
-  let return_to = query.return_to && String(query.return_to);
-  if (return_to) {
-    req.session.set('return_to', return_to);
-    await req.session.save();
-  } else {
-    return_to = req.session.get('return_to');
-  }
-
-  if (!query.flow) {
-    return {
-      redirect: {
-        destination: '/self-service/verification/browser',
-        permanent: false,
-      },
-    };
-  }
-
-  try {
-    const kratos_client = new KratosPublicApi({ basePath: process.env.NEXT_PUBLIC_BASE_URL });
-    const { data: flow } = await kratos_client.getSelfServiceVerificationFlow(String(query.flow));
-
-    // If the flow is complete, destroy the session cache
-    if (flow.state === 'passed_challenge') {
-      await req.session.destroy();
+  async asyncData({ query, req, redirect, error }: Context) {
+    // If we have a return_to address, store it and initiate login flow
+    if (query.return_to) {
+      req.session.return_to = query.return_to;
+      return redirect(`/self-service/verification/browser?return_to=${req.session.return_to}`);
     }
 
-    return { props: { return_to, flow } };
-  } catch (err) {
-    return {
-      props: {
-        error: {
-          statusCode: err.response.data.error.code,
-          message: err.response.data.error.message,
-        },
-      }
-    };
-  }
-});
+    // If we don't have a return_to or flow parameter, something is wrong
+    if (!query.flow) {
+      return error({
+        statusCode: 400,
+        message: 'Login flow not initialized',
+      });
+    }
 
-const useStyles = makeStyles(theme => ({
-  alert: {
-    textAlign: 'left',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  }
-}));
-
-const VerifyPage = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
-  const classes = useStyles();
-
-  if (props.flow.state === 'passed_challenge') {
-    return (
-      <FormWrapper
-        title="Verification successful"
-        subtitle={`Thanks for verifying your email address. Click the button below to continue on to ${process.env.NEXT_PUBLIC_APP_NAME}.`}
-      >
-        <Button color="primary" variant="contained" fullWidth disableElevation href={props.return_to}>Continue to {process.env.NEXT_PUBLIC_APP_NAME}</Button>
-      </FormWrapper>
+    const kratos_client = new PublicApi(
+      new Configuration({
+        basePath: process.env.KRATOS_PUBLIC_URL,
+      })
     );
-  } else {
-    return (
-      <FormWrapper title="Email verification" subtitle="A verification email has been sent to the address specified during signup. If you need to resend this verification, type in your email below:">
-        {(props.flow.messages || []).map((message, index) => (
-          <Alert key={index} severity={message.type as Color} className={classes.alert}>{message.text}</Alert>
-        ))}
 
-        {Object.values(props.flow.methods || {}).map((method, index) => (
-          <KratosForm key={index} config={method.config} method={method.method} />
-        ))}
-      </FormWrapper>
-    );
+    try {
+      const res = await kratos_client.getSelfServiceVerificationFlow(String(query.flow));
+      return {
+        flow: res.data,
+        return_to: req.session.return_to,
+      };
+    } catch (err) {
+      return error({
+        statusCode: 500,
+        message: 'Invalid verification flow ID',
+      });
+    }
   }
-};
 
-export default VerifyPage;
+  render() {
+    if (this.flow.state === 'passed_challenge') {
+      return (
+        <FormWrapper
+          title="Verification successful"
+          subtitle={`Thanks for verifying your email address. Click the button below to continue on to ${process.env.NEXT_PUBLIC_APP_NAME}.`}
+        >
+          <v-btn color="primary" variant="contained" block depressed href={this.return_to}>
+            Continue to {process.env.NEXT_PUBLIC_APP_NAME}
+          </v-btn>
+        </FormWrapper>
+      );
+    } else {
+      return (
+        <FormWrapper
+          title="Email verification"
+          subtitle="A verification email has been sent to the address specified during signup. If you need to resend this verification, type in your email below:"
+        >
+          {(this.flow.messages || []).map((message) => (
+            <v-alert severity={message.type} text class="mb-4">
+              {message.text}
+            </v-alert>
+          ))}
+
+          {Object.values(this.flow.methods || {}).map((method, index) => (
+            <KratosForm config={method.config} method={method.method} />
+          ))}
+        </FormWrapper>
+      );
+    }
+  }
+}

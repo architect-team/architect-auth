@@ -1,11 +1,13 @@
-import { Button, ButtonProps, Divider, makeStyles, TextField } from '@material-ui/core';
-import { GitHub as GitHubIcon } from '@material-ui/icons';
-import { Alert, Color } from '@material-ui/lab';
-import { FormField, LoginFlowMethodConfig, RegistrationFlowMethodConfig } from '@oryd/kratos-client';
-import React from 'react';
+import {
+  FormField,
+  LoginFlowMethodConfig,
+  RegistrationFlowMethodConfig,
+} from '@oryd/kratos-client';
+import { Component, Prop } from 'nuxt-property-decorator';
+import { VueComponent } from '~/vue-component';
 
 interface KratosFormProps {
-  buttonPrefix: string;
+  buttonPrefix?: string;
   config: LoginFlowMethodConfig | RegistrationFlowMethodConfig;
   method: string;
   divider?: boolean;
@@ -22,7 +24,7 @@ const field_translations = {
     position: 0,
     icon: null,
   },
-  'email': {
+  email: {
     title: 'Email address',
     position: 1,
     icon: null,
@@ -57,17 +59,17 @@ const field_translations = {
     position: 6,
     icon: null,
   },
-  'github': {
+  github: {
     title: 'GitHub',
     position: 0,
-    icon: GitHubIcon,
+    icon: 'mdi-github',
   },
-  'gitlab': {
+  gitlab: {
     title: 'GitLab',
     position: 1,
     icon: null,
   },
-  'google': {
+  google: {
     title: 'Google',
     position: 2,
     icon: null,
@@ -76,106 +78,93 @@ const field_translations = {
 
 type FieldTranslations = typeof field_translations;
 
-const useStyles = makeStyles(theme => ({
-  buffered: {
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1),
-  },
+const getFieldPosition = (field: FormField) =>
+  field.name && field.name in field_translations
+    ? field_translations[field.name as keyof FieldTranslations].position
+    : Infinity;
 
-  alert: {
-    textAlign: 'left',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
-  },
-}));
+const getLabel = (key: string) =>
+  key in field_translations ? field_translations[key as keyof FieldTranslations].title : key;
 
-const KratosForm = (props: KratosFormProps) => {
-  const classes = useStyles();
+const getIcon = (key: string) =>
+  key in field_translations ? field_translations[key as keyof FieldTranslations].icon : null;
 
-  const getFieldPosition = (field: FormField) =>
-    field.name && field.name in field_translations
-      ? field_translations[field.name as keyof FieldTranslations].position
-      : Infinity;
+@Component
+export default class KratosForm extends VueComponent<KratosFormProps> {
+  @Prop({ default: 'Log in with' })
+  buttonPrefix!: string;
 
-  const getLabel = (key: string) => key in field_translations
-    ? field_translations[key as keyof FieldTranslations].title
-    : key;
+  @Prop()
+  config!: LoginFlowMethodConfig | RegistrationFlowMethodConfig;
 
-  const getIcon = (key: string) => key in field_translations
-    ? field_translations[key as keyof FieldTranslations].icon
-    : null;
+  @Prop()
+  method!: string;
 
-  const sorted_fields = props.config.fields.sort(
-    (first: FormField, second: FormField) => getFieldPosition(first) - getFieldPosition(second)
-  );
+  @Prop({ default: false })
+  divider!: boolean;
 
-  let messages = props.config.messages || [];
-  sorted_fields.forEach(field => {
-    if (field.messages) {
-      messages.push(...field.messages);
-    }
-  });
+  render() {
+    const sorted_fields = this.config.fields.sort(
+      (first: FormField, second: FormField) => getFieldPosition(first) - getFieldPosition(second)
+    );
 
-  return (
-    <form method={props.config.method} action={props.config.action}>
-      {messages.map((message, index) => (
-        <Alert key={index} severity={message.type as Color} className={classes.alert}>{message.text}</Alert>
-      ))}
+    let messages = this.config.messages || [];
+    sorted_fields.forEach((field) => {
+      if (field.messages) {
+        messages.push(...field.messages);
+      }
+    });
 
-      {sorted_fields.map(field => {
-        switch (field.type) {
-          case 'hidden':
-            return <input key={field.name} type={field.type} name={field.name} value={String(field.value)}  />;
-          case 'submit':
-            return (
-              <Button
-                key={field.name}
-                type={field.type}
-                name={field.name}
-                fullWidth
-                disableElevation
-                variant="contained"
-                startIcon={React.createElement(getIcon(String(field.value)))}
-                className={classes.buffered}
-                component={React.forwardRef<HTMLButtonElement, Partial<ButtonProps>>(
-                  (props, ref) => <button ref={ref} value={String(field.value)} {...props} />
-                )}
-              >
-                {props.buttonPrefix} {getLabel(String(field.value))}
-              </Button>
-            );
-          default:
-            return (
-              <TextField
-                key={field.name}
-                variant="outlined"
-                margin="normal"
-                fullWidth
-                type={field.type}
-                required={field.required}
-                name={field.name}
-                label={getLabel(field.name)}
-                defaultValue={field.value}
-                error={Boolean(field.messages)}
-              />
-            );
-        }
-      })}
+    return (
+      <form method={this.config.method} action={this.config.action}>
+        {messages.map((message) => (
+          <v-alert type={message.type} text class="mb-4">
+            {message.text}
+          </v-alert>
+        ))}
 
-      {['password', 'link'].includes(props.method) && (
-        <Button type="submit" color="primary" variant="contained" fullWidth disableElevation className={classes.buffered}>Continue</Button>
-      )}
+        {sorted_fields.map((field) => {
+          switch (field.type) {
+            case 'hidden':
+              return (
+                <input
+                  key={field.name}
+                  type={field.type}
+                  name={field.name}
+                  value={String(field.value)}
+                />
+              );
+            case 'submit':
+              return (
+                <v-btn type={field.type} name={field.name} block depressed class="mb-4">
+                  <v-icon left>{getIcon(String(field.value))}</v-icon>
+                  {this.buttonPrefix} {getLabel(String(field.value))}
+                </v-btn>
+              );
+            default:
+              return (
+                <v-text-field
+                  outlined
+                  block
+                  type={field.type}
+                  required={field.required}
+                  name={field.name}
+                  label={getLabel(field.name)}
+                  defaultValue={field.value}
+                  error={Boolean(field.messages)}
+                />
+              );
+          }
+        })}
 
-      {props.divider && (
-        <Divider className={classes.buffered} />
-      )}
-    </form>
-  );
-};
+        {['password', 'link'].includes(this.method) && (
+          <v-btn type="submit" color="primary" block depressed class="mb-6">
+            Continue
+          </v-btn>
+        )}
 
-KratosForm.defaultProps = {
-  buttonPrefix: 'Log in with',
-  divider: false,
-};
-
-export default KratosForm;
+        {this.divider && <v-divider class="my-1" />}
+      </form>
+    );
+  }
+}

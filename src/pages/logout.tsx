@@ -1,44 +1,16 @@
-import { AdminApi as HydraAdminApi } from '@oryd/hydra-client';
+import { Context } from '@nuxt/types';
+import { Vue, Component } from 'nuxt-property-decorator';
 
-export const getServerSideProps = async ({ query }) => {
-  if (!query.logout_challenge) {
-    return {
-      props: {
-        error: {
-          statusCode: 500,
-          message: 'The logout_challenge is missing. Please logout through the proper channels.'
-        }
-      }
+@Component
+export default class LogoutPage extends Vue {
+  async asyncData({ query, redirect, error }: Context) {
+    if (!query.return_to) {
+      return error({
+        statusCode: 400,
+        message: 'No return_to value provided in the query params',
+      });
     }
+
+    return redirect(`/self-service/browser/flows/logout?return_to=${query.return_to}`);
   }
-
-  try {
-    const hydra_admin_client = new HydraAdminApi({ basePath: process.env.HYDRA_ADMIN_URL });
-
-    // Make sure the challenge is valid before accepting
-    await hydra_admin_client.getLogoutRequest(query.logout_challenge);
-
-    // Automatically accept the challenge and redirect
-    const { data: accepted_request } = await hydra_admin_client.acceptLogoutRequest(query.logout_challenge);
-    return {
-      redirect: {
-        destination: accepted_request.redirect_to,
-        permanent: false,
-      },
-    };
-  } catch (err) {
-    return {
-      props: {
-        error: {
-          statusCode: err.response.data.error.code,
-          message: err.response.data.error.message,
-        },
-      }
-    };
-  }
-
-};
-
-const LogoutPage = () => <div />;
-
-export default LogoutPage;
+}
