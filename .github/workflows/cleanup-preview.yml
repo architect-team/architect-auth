@@ -23,4 +23,4 @@ jobs:
       - name: Clear the environment
         run: architect destroy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e ${{ env.PREVIEW_ENV_NAME }}
       - name: Cleanup the environment
-        run: architect env:destroy --auto_approve -a ${{ env.ACCOUNT_NAME }} -e ${{ env.PREVIEW_ENV_NAME }}
+        run: architect env:destroy --auto_approve -a ${{ env.ACCOUNT_NAME }} ${{ env.PREVIEW_ENV_NAME }}
