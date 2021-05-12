@@ -42,3 +42,4 @@ serve:
   public:
     cors:
       enabled: true
+      allowed_origins: ${{ ingresses.frontend.consumers }}
