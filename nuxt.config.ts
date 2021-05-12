@@ -9,7 +9,7 @@ const config = {
 
   serverMiddleware: [
     '~/server-middleware/session',
-    '~/server-middleware/body-parser',
+    { path: '/oauth2/consent', handler: '~/server-middleware/body-parser' },
   ],
 
   // Global page headers: https://go.nuxtjs.dev/config-head

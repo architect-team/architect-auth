@@ -36,7 +36,7 @@ Once the stack has fully booted up, you'll need to create an OAuth client that i
 ```sh
 curl --location --request POST 'http://localhost/clients' \
   --header 'Content-Type: application/json' \
-  --header 'Host: hydra.localhost' \
+  --header 'Host: hydra.arc.localhost' \
   --data-raw '{
     "client_id": "postman",
     "client_name": "Postman",

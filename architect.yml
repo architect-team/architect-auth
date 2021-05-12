@@ -17,7 +17,7 @@ dependencies:
 parameters:
   LOG_LEVEL:
     description: One of trace, debug, info, warning, error, fatal, or panic
-    default: info
+    default: error
   KRATOS_DB_NAME:
     description: Name of the database used to house the Kratos API contents
     default: kratos
