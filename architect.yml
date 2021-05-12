@@ -57,12 +57,14 @@ services:
       HYDRA_CONFIG: file:./hydra/.hydra.yml
       LOG_LEVEL: ${{ parameters.LOG_LEVEL }}
       DSN: ${{ dependencies['architect/postgres'].interfaces.postgres.url }}/${{ parameters.HYDRA_DB_NAME }}?sslmode=disable
-      URLS_SELF_ISSUER: ${{ environment.ingresses['architect/auth'].frontend.url }}
-      URLS_SELF_PUBLIC: ${{ environment.ingresses['architect/auth'].frontend.url }}
-      URLS_CONSENT: ${{ environment.ingresses['architect/auth'].frontend.url }}/oauth2/consent
-      URLS_LOGIN: ${{ environment.ingresses['architect/auth'].frontend.url }}/oauth2/login
-      URLS_LOGOUT: ${{ environment.ingresses['architect/auth'].frontend.url }}/oauth2/logout
+      URLS_SELF_ISSUER: ${{ ingresses.frontend.url }}
+      URLS_SELF_PUBLIC: ${{ ingresses.frontend.url }}
+      URLS_CONSENT: ${{ ingresses.frontend.url }}/oauth2/consent
+      URLS_LOGIN: ${{ ingresses.frontend.url }}/oauth2/login
+      URLS_LOGOUT: ${{ ingresses.frontend.url }}/oauth2/logout
       SECRETS_SYSTEM: ${{ parameters.SIGNING_SECRET }}
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
+      SERVE_ADMIN_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
 
       # Used by psql client for DB upsert
       PGHOST: ${{ dependencies['architect/postgres'].interfaces.postgres.host }}
@@ -76,9 +78,6 @@ services:
       - sh
       - -c
       - |
-        export ALLOWED_ORIGINS=$$(echo '${{ environment.ingresses }}' | jq -r '.[][].url')
-        export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=$ALLOWED_ORIGINS
-        export SERVE_ADMIN_CORS_ALLOWED_ORIGINS=$ALLOWED_ORIGINS
         echo "$HYDRA_CONFIG" > /etc/config/hydra/.hydra.yml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.HYDRA_DB_NAME }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.HYDRA_DB_NAME }}')\gexec" | psql > /dev/null
@@ -97,16 +96,18 @@ services:
       DSN: ${{ dependencies['architect/postgres'].interfaces.postgres.url }}/${{ parameters.KRATOS_DB_NAME }}?sslmode=disable
       COURIER_SMTP_CONNECTION_URI: ${{ dependencies['architect/smtp-server'].interfaces.smtp.url }}
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.SMTP_FROM_ADDRESS }}
-      SERVE_PUBLIC_BASE_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}
+      SERVE_PUBLIC_BASE_URL: ${{ ingresses.frontend.url }}
       SERVE_ADMIN_BASE_URL: ${{ services.kratos.interfaces.admin.url }}
-      SELFSERVICE_WHITELISTED_RETURN_URLS: ${{ environment.ingresses['architect/auth'].frontend.url }}
-      SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}
-      SELFSERVICE_FLOWS_LOGIN_UI_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}/login
-      SELFSERVICE_FLOWS_REGISTRATION_UI_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}/signup
-      SELFSERVICE_FLOWS_VERIFICATION_UI_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}/verify
-      SELFSERVICE_FLOWS_RECOVERY_UI_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}/recovery
-      SELFSERVICE_FLOWS_SETTINGS_UI_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}/settings
-      SELFSERVICE_FLOWS_ERROR_UI_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}/error
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
+      SERVE_ADMIN_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
+      SELFSERVICE_WHITELISTED_RETURN_URLS: ${{ ingresses.frontend.url }}
+      SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${{ ingresses.frontend.url }}
+      SELFSERVICE_FLOWS_LOGIN_UI_URL: ${{ ingresses.frontend.url }}/login
+      SELFSERVICE_FLOWS_REGISTRATION_UI_URL: ${{ ingresses.frontend.url }}/signup
+      SELFSERVICE_FLOWS_VERIFICATION_UI_URL: ${{ ingresses.frontend.url }}/verify
+      SELFSERVICE_FLOWS_RECOVERY_UI_URL: ${{ ingresses.frontend.url }}/recovery
+      SELFSERVICE_FLOWS_SETTINGS_UI_URL: ${{ ingresses.frontend.url }}/settings
+      SELFSERVICE_FLOWS_ERROR_UI_URL: ${{ ingresses.frontend.url }}/error
       SECRETS_DEFAULT: ${{ parameters.SIGNING_SECRET }}
       GITHUB_CLIENT_ID: ${{ parameters.GITHUB_CLIENT_ID }}
       GITHUB_CLIENT_SECRET: ${{ parameters.GITHUB_CLIENT_SECRET }}
@@ -123,9 +124,6 @@ services:
       - sh
       - -c
       - |
-        export ALLOWED_ORIGINS=$$(echo '${{ environment.ingresses }}' | jq -r '.[][].url')
-        export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=$ALLOWED_ORIGINS
-        export SERVE_ADMIN_CORS_ALLOWED_ORIGINS=$ALLOWED_ORIGINS
         echo "$DEFAULT_IDENTITY_SCHEMA" > $HOME/identity.schema.json
         echo "$GITHUB_SCHEMA_MAPPER" > $HOME/github.schema.jsonnet
         echo "$GITLAB_SCHEMA_MAPPER" > $HOME/gitlab.schema.jsonnet
@@ -140,7 +138,7 @@ services:
     build:
       context: ./
     environment:
-      BASE_URL: ${{ environment.ingresses['architect/auth'].frontend.url }}
+      BASE_URL: ${{ ingresses.frontend.url }}
       LOG_LEVEL: ${{ parameters.LOG_LEVEL }}
       KRATOS_ADMIN_URL: ${{ services.kratos.interfaces.admin.url }}
       KRATOS_PUBLIC_URL: ${{ services.kratos.interfaces.public.url }}
