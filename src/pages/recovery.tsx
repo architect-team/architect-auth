@@ -1,9 +1,9 @@
 import { Context } from '@nuxt/types';
-import { Configuration, PublicApi, RecoveryFlow } from '@oryd/kratos-client';
+import { Configuration, PublicApi, RecoveryFlow } from '@ory/kratos-client';
 import { Component } from 'vue-property-decorator';
-import { VueComponent } from '~/vue-component';
 import FormWrapper from '~/components/form-wrapper';
-import KratosForm from '~/components/kratos-form';
+import KratosUi from '~/components/kratos/ui';
+import { VueComponent } from '~/vue-component';
 
 @Component
 export default class RecoverPage extends VueComponent<any> {
@@ -51,17 +51,11 @@ export default class RecoverPage extends VueComponent<any> {
         title="Forgot your password?"
         subtitle="Enter your email address and we will send you instructions to reset your password"
       >
-        {(this.flow.messages || []).map((message, index) => (
-          <v-alert key={index} type={message.type} text class="mb-4">
-            {message.text}
-          </v-alert>
-        ))}
+        <KratosUi ui={this.flow.ui} />
 
-        {Object.values(this.flow.methods || {}).map((method) => (
-          <KratosForm config={method.config} method={method.method} />
-        ))}
+        <v-divider class="mt-4" />
 
-        <div class="text-center">
+        <div class="text-center mt-4">
           <a href={`/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
             Back to login
           </a>

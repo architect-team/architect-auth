@@ -1,8 +1,8 @@
 import { Context } from '@nuxt/types';
-import { Configuration, LoginFlow, PublicApi } from '@oryd/kratos-client';
+import { Configuration, LoginFlow, PublicApi } from '@ory/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
-import KratosForm from '~/components/kratos-form';
+import KratosUi from '~/components/kratos/ui';
 
 @Component
 export default class LoginPage extends Vue {
@@ -45,36 +45,14 @@ export default class LoginPage extends Vue {
   }
 
   render() {
-    const sorted_methods = [];
-    const { password, oidc, ...methods } = this.flow.methods;
-    if (password) {
-      sorted_methods.push(password);
-    }
-
-    if (oidc) {
-      sorted_methods.push(oidc);
-    }
-
-    sorted_methods.push(...Object.values(methods));
-
     return (
       <FormWrapper
         title="Welcome back"
         subtitle={`Log in below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
       >
-        {(this.flow.messages || []).map((message, index) => (
-          <v-alert key={index} type={message.type} text class="mb-4">
-            {message.text}
-          </v-alert>
-        ))}
+        <KratosUi ui={this.flow.ui} />
 
-        {sorted_methods.map((method, index) => (
-          <KratosForm
-            config={method.config}
-            method={method.method}
-            divider={index + 1 < sorted_methods.length}
-          />
-        ))}
+        <v-divider class="mt-8" />
 
         <v-row class="mt-0">
           <v-col>

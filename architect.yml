@@ -77,7 +77,6 @@ services:
       - -c
       - |
         echo "$HYDRA_CONFIG" > /etc/config/hydra/.hydra.yml
-        cat /etc/config/hydra/.hydra.yml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.HYDRA_DB_NAME }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.HYDRA_DB_NAME }}')\gexec" | psql > /dev/null
         hydra migrate -c /etc/config/hydra/.hydra.yml sql -e --yes
@@ -129,7 +128,10 @@ services:
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.KRATOS_DB_NAME }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.KRATOS_DB_NAME }}')\gexec" | psql > /dev/null
         kratos migrate sql -e --yes
-        kratos serve
+        kratos serve -c $HOME/.kratos.yaml
+    debug:
+      environment:
+        HASHERS_BCRYPT_COST: 4
 
   app:
     build:

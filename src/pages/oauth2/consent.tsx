@@ -1,6 +1,9 @@
 import { Context } from '@nuxt/types';
+import {
+  Configuration as KratosConfiguration,
+  PublicApi as KratosPublicApi,
+} from '@ory/kratos-client';
 import { AdminApi as HydraAdminApi, ConsentRequest } from '@oryd/hydra-client';
-import { PublicApi as KratosPublicApi } from '@oryd/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
 
@@ -16,7 +19,9 @@ const submitHandler = async ({ req, redirect, error }: Context) => {
 
   try {
     const hydra_admin_client = new HydraAdminApi({ basePath: process.env.HYDRA_ADMIN_URL });
-    const kratos_client = new KratosPublicApi({ basePath: process.env.KRATOS_PUBLIC_URL });
+    const kratos_client = new KratosPublicApi(
+      new KratosConfiguration({ basePath: process.env.KRATOS_PUBLIC_URL })
+    );
 
     if (req.body.submit === 'deny') {
       const { data: rejected_request } = await hydra_admin_client.rejectConsentRequest(challenge);
@@ -28,7 +33,10 @@ const submitHandler = async ({ req, redirect, error }: Context) => {
       : [req.body.grant_scope];
 
     const { data: consent_request } = await hydra_admin_client.getConsentRequest(challenge);
-    const { data: login_session } = await kratos_client.whoami(String(req.headers.cookie), String(req.headers.authorization));
+    const { data: login_session } = await kratos_client.whoami(
+      String(req.headers.cookie),
+      String(req.headers.authorization)
+    );
     const traits = login_session.identity.traits as any;
     const { data: accepted_request } = await hydra_admin_client.acceptConsentRequest(challenge, {
       grant_scope,
@@ -38,12 +46,16 @@ const submitHandler = async ({ req, redirect, error }: Context) => {
       session: {
         access_token: {
           email: traits.email,
-          email_verified: !!(login_session.identity.verifiable_addresses || []).find(addr => addr.value === traits.email && addr.verified),
+          email_verified: !!(login_session.identity.verifiable_addresses || []).find(
+            (addr) => addr.value === traits.email && addr.verified
+          ),
           nickname: traits.username,
         },
         id_token: {
           email: traits.email,
-          email_verified: !!(login_session.identity.verifiable_addresses || []).find(addr => addr.value === traits.email && addr.verified),
+          email_verified: !!(login_session.identity.verifiable_addresses || []).find(
+            (addr) => addr.value === traits.email && addr.verified
+          ),
           nickname: traits.username,
         },
       },
@@ -53,7 +65,7 @@ const submitHandler = async ({ req, redirect, error }: Context) => {
     if (err.response?.data?.error) {
       return error({
         statusCode: err.response.data.error.code,
-        message: err.response.data.error.message
+        message: err.response.data.error.message,
       });
     } else {
       return error({
@@ -84,7 +96,9 @@ export default class ConsentPage extends Vue {
     }
 
     const hydra_admin_client = new HydraAdminApi({ basePath: process.env.HYDRA_ADMIN_URL });
-    const kratos_client = new KratosPublicApi({ basePath: process.env.KRATOS_PUBLIC_URL });
+    const kratos_client = new KratosPublicApi(
+      new KratosConfiguration({ basePath: process.env.KRATOS_PUBLIC_URL })
+    );
 
     try {
       const { data: consent_request } = await hydra_admin_client.getConsentRequest(

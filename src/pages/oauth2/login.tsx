@@ -1,11 +1,11 @@
-import crypto from 'crypto';
 import { Context } from '@nuxt/types';
-import { AdminApi as HydraAdminApi, Configuration as HydraConfiguration } from '@oryd/hydra-client';
-import { Vue, Component } from 'nuxt-property-decorator';
 import {
   Configuration as KratosConfiguration,
   PublicApi as KratosPublicApi,
-} from '@oryd/kratos-client';
+} from '@ory/kratos-client';
+import { AdminApi as HydraAdminApi, Configuration as HydraConfiguration } from '@oryd/hydra-client';
+import crypto from 'crypto';
+import { Component, Vue } from 'nuxt-property-decorator';
 
 const SESSION_STATE_KEY = 'hydra_login_state';
 

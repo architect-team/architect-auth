@@ -1,31 +1,16 @@
-version: v0.5.5-alpha.1
-hashers:
-  argon2:
-    parallelism: 1
-    memory: 131072
-    iterations: 1
-    salt_length: 16
-    key_length: 16
 identity:
   default_schema_url: file:///home/ory/identity.schema.json
+
 selfservice:
   flows:
     settings:
       privileged_session_max_age: 1m
-      after:
-        profile:
-          hooks:
-            - hook: verify
     login:
       lifespan: 10m
     verification:
       enabled: true
     registration:
       lifespan: 10m
-      after:
-        password:
-          hooks:
-            - hook: session
     recovery:
       enabled: true
       lifespan: 10m
@@ -38,6 +23,7 @@ selfservice:
         providers: []
     link:
       enabled: true
+
 serve:
   public:
     cors:

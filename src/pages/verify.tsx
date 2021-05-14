@@ -1,8 +1,8 @@
 import { Context } from '@nuxt/types';
-import { Configuration, PublicApi, VerificationFlow } from '@oryd/kratos-client';
-import { Vue, Component } from 'nuxt-property-decorator';
+import { Configuration, PublicApi, VerificationFlow } from '@ory/kratos-client';
+import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
-import KratosForm from '~/components/kratos-form';
+import KratosUi from '~/components/kratos/ui';
 
 @Component
 export default class VerifyPage extends Vue {
@@ -62,15 +62,7 @@ export default class VerifyPage extends Vue {
           title="Email verification"
           subtitle="A verification email has been sent to the address specified during signup. If you need to resend this verification, type in your email below:"
         >
-          {(this.flow.messages || []).map((message) => (
-            <v-alert severity={message.type} text class="mb-4">
-              {message.text}
-            </v-alert>
-          ))}
-
-          {Object.values(this.flow.methods || {}).map((method, index) => (
-            <KratosForm config={method.config} method={method.method} />
-          ))}
+          <KratosUi ui={this.flow.ui} />
         </FormWrapper>
       );
     }
