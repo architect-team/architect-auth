@@ -34,9 +34,10 @@ export default class KratosUiNode extends VueComponent<KratosUiNodeProps> {
         block
         label={this.label}
         type={attributes.type}
-        required={attributes.required}
+        required={Boolean(attributes.required)}
         name={attributes.name}
-        defaultValue={attributes.value}
+        value={attributes.value}
+        error={Boolean(this.node.messages)}
       />
     );
   }
@@ -46,20 +47,21 @@ export default class KratosUiNode extends VueComponent<KratosUiNodeProps> {
     return (
       <v-btn
         block
+        depressed
         color="primary"
         name={attributes.name}
         type={attributes.type}
         value={attributes.value}
         disabled={attributes.disabled}
       >
-        {this.node.meta.label?.text}
+        {this.label}
       </v-btn>
     );
   }
 
   private renderCheckboxInput() {
     const attributes = this.node.attributes as UiNodeInputAttributes;
-    return <v-checkbox name={attributes.name} value={attributes.value} label={attributes.label} />;
+    return <v-checkbox name={attributes.name} value={attributes.value} label={this.label} />;
   }
 
   render() {

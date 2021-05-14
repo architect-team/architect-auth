@@ -66,7 +66,6 @@ export default class LoginPage extends Vue {
           basePath: process.env.KRATOS_PUBLIC_URL,
         })
       );
-      console.log(req.headers);
       const { data: login_session } = await kratos_public_client.whoami(
         String(req.headers.cookie),
         String(req.headers.authorization)

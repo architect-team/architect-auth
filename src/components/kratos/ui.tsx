@@ -14,16 +14,22 @@ export default class KratosUi extends VueComponent<KratosUiProps> {
   ui!: UiContainer;
 
   render() {
+    const messages = this.ui.messages || [];
+    this.ui.nodes.forEach((node) => {
+      messages.concat(node.messages || []);
+    });
     return (
-      <form action={this.ui.action} method={this.ui.method}>
-        {this.ui.messages?.map((message) => (
-          <KratosMessage message={message} />
-        ))}
+      <div>
+        <form action={this.ui.action} method={this.ui.method}>
+          {messages.map((message) => (
+            <KratosMessage message={message} />
+          ))}
 
-        {this.ui.nodes.map((node) => (
-          <KratosUiNode node={node} />
-        ))}
-      </form>
+          {this.ui.nodes.map((node) => (
+            <KratosUiNode node={node} />
+          ))}
+        </form>
+      </div>
     );
   }
 }

@@ -1,22 +1,21 @@
 import { Context } from '@nuxt/types';
-import { Configuration, PublicApi, RegistrationFlow } from '@ory/kratos-client';
+import {
+  Configuration,
+  PublicApi,
+  RegistrationFlow,
+  UiNodeInputAttributes,
+} from '@ory/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
-import KratosUi from '~/components/kratos/ui';
+import KratosMessage from '~/components/kratos/message';
+import KratosUiNode from '~/components/kratos/ui-node';
 
 @Component
 export default class SignupPage extends Vue {
   flow!: RegistrationFlow;
-  return_to!: string;
 
   async asyncData({ query, req, redirect, error }: Context) {
-    // If we have a return_to address, store it and initiate login flow
-    if (query.return_to) {
-      req.session.return_to = query.return_to;
-      return redirect(`/self-service/registration/browser?return_to=${req.session.return_to}`);
-    }
-
-    // If we don't have a return_to or flow parameter, something is wrong
+    // If we don't have a flow parameter, something is wrong
     if (!query.flow) {
       return error({
         statusCode: 400,
@@ -34,7 +33,6 @@ export default class SignupPage extends Vue {
       const res = await kratos_client.getSelfServiceRegistrationFlow(String(query.flow));
       return {
         flow: res.data,
-        return_to: req.session.return_to,
       };
     } catch (err) {
       return error({
@@ -45,23 +43,68 @@ export default class SignupPage extends Vue {
   }
 
   render() {
+    const common_nodes = this.flow.ui.nodes.filter((node) => node.group === 'default');
+    const password_nodes = this.flow.ui.nodes.filter((node) => node.group === 'password');
+    const oidc_nodes = this.flow.ui.nodes.filter((node) => node.group === 'oidc');
+
+    let messages = this.flow.ui.messages || [];
+    this.flow.ui.nodes.forEach((node) => {
+      messages = messages.concat(node.messages || []);
+    });
+
+    const request_url = new URL(this.flow.request_url);
+    const return_to = request_url.searchParams.get('return_to') as string;
+
     return (
-      <FormWrapper
-        title="Welcome"
-        subtitle={`Sign up below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
-      >
-        <KratosUi ui={this.flow.ui} />
+      <div>
+        <FormWrapper
+          title="Welcome"
+          subtitle={`Sign up below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
+        >
+          {messages?.map((message) => (
+            <KratosMessage message={message} />
+          ))}
 
-        <v-divider class="mt-4" />
+          <form action={this.flow.ui.action} method={this.flow.ui.method}>
+            {common_nodes.concat(password_nodes).map((node) => (
+              <KratosUiNode node={node} />
+            ))}
+          </form>
 
-        <v-row class="mt-0">
-          <v-col>
-            <a href={`/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
+          <v-divider class="my-4" />
+
+          <form action={this.flow.ui.action} method={this.flow.ui.method}>
+            {common_nodes.concat(oidc_nodes).map((node) => {
+              const attributes = node.attributes as UiNodeInputAttributes;
+              if (attributes.type === 'submit') {
+                return (
+                  <v-btn
+                    block
+                    depressed
+                    name={attributes.name}
+                    type={attributes.type}
+                    value={attributes.value}
+                    disabled={attributes.disabled}
+                  >
+                    <v-icon left>mdi-github</v-icon>
+                    {node.meta.label?.text}
+                  </v-btn>
+                );
+              }
+
+              return <KratosUiNode node={node} />;
+            })}
+          </form>
+        </FormWrapper>
+
+        <v-row class="ma-0">
+          <v-col class="text-center">
+            <a href={`/self-service/login/browser?return_to=${encodeURIComponent(return_to)}`}>
               Already have an account? Log in.
             </a>
           </v-col>
         </v-row>
-      </FormWrapper>
+      </div>
     );
   }
 }

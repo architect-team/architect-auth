@@ -13,7 +13,7 @@ export default class KratosMessage extends VueComponent<KratosMessageProps> {
 
   render() {
     return (
-      <v-alert type={this.message.type} text class="mb-4">
+      <v-alert type={this.message.type} text class="mb-8 text-left">
         {this.message.text}
       </v-alert>
     );

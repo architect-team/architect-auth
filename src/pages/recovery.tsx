@@ -8,16 +8,9 @@ import { VueComponent } from '~/vue-component';
 @Component
 export default class RecoverPage extends VueComponent<any> {
   flow!: RecoveryFlow;
-  return_to!: string;
 
   async asyncData({ query, req, redirect, error }: Context) {
-    // If we have a return_to address, store it and initiate login flow
-    if (query.return_to) {
-      req.session.return_to = query.return_to;
-      return redirect(`/self-service/recovery/browser?return_to=${req.session.return_to}`);
-    }
-
-    // If we don't have a return_to or flow parameter, something is wrong
+    // If we don't have a flow parameter, something is wrong
     if (!query.flow) {
       return error({
         statusCode: 400,
@@ -35,7 +28,6 @@ export default class RecoverPage extends VueComponent<any> {
       const res = await kratos_client.getSelfServiceRecoveryFlow(String(query.flow));
       return {
         flow: res.data,
-        return_to: req.session.return_to,
       };
     } catch (err) {
       return error({
@@ -46,21 +38,24 @@ export default class RecoverPage extends VueComponent<any> {
   }
 
   render() {
-    return (
-      <FormWrapper
-        title="Forgot your password?"
-        subtitle="Enter your email address and we will send you instructions to reset your password"
-      >
-        <KratosUi ui={this.flow.ui} />
+    const request_url = new URL(this.flow.request_url);
+    const return_to = request_url.searchParams.get('return_to') as string;
 
-        <v-divider class="mt-4" />
+    return (
+      <div>
+        <FormWrapper
+          title="Forgot your password?"
+          subtitle="Enter your email address and we will send you instructions to reset your password"
+        >
+          <KratosUi ui={this.flow.ui} />
+        </FormWrapper>
 
         <div class="text-center mt-4">
-          <a href={`/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
+          <a href={`/self-service/login/browser?return_to=${encodeURIComponent(return_to)}`}>
             Back to login
           </a>
         </div>
-      </FormWrapper>
+      </div>
     );
   }
 }
