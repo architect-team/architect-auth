@@ -61,30 +61,32 @@ export default class LoginPage extends Vue {
             ))}
           </form>
 
-          <v-divider class="my-4" />
+          {oidc_nodes.length > 0 && <v-divider class="my-4" />}
 
-          <form action={this.flow.ui.action} method={this.flow.ui.method}>
-            {common_nodes.concat(oidc_nodes).map((node) => {
-              const attributes = node.attributes as UiNodeInputAttributes;
-              if (attributes.type === 'submit') {
-                return (
-                  <v-btn
-                    block
-                    depressed
-                    name={attributes.name}
-                    type={attributes.type}
-                    value={attributes.value}
-                    disabled={attributes.disabled}
-                  >
-                    <v-icon left>mdi-github</v-icon>
-                    {node.meta.label?.text}
-                  </v-btn>
-                );
-              }
+          {oidc_nodes.length > 0 && (
+            <form action={this.flow.ui.action} method={this.flow.ui.method}>
+              {common_nodes.concat(oidc_nodes).map((node) => {
+                const attributes = node.attributes as UiNodeInputAttributes;
+                if (attributes.type === 'submit') {
+                  return (
+                    <v-btn
+                      block
+                      depressed
+                      name={attributes.name}
+                      type={attributes.type}
+                      value={attributes.value}
+                      disabled={attributes.disabled}
+                    >
+                      <v-icon left>mdi-github</v-icon>
+                      {node.meta.label?.text}
+                    </v-btn>
+                  );
+                }
 
-              return <KratosUiNode node={node} />;
-            })}
-          </form>
+                return <KratosUiNode node={node} />;
+              })}
+            </form>
+          )}
         </FormWrapper>
 
         <v-row class="ma-0">
