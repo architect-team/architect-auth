@@ -47,11 +47,11 @@ export default class VerifyPage extends Vue {
       return (
         <FormWrapper
           title="Verification successful"
-          subtitle={`Thanks for verifying your email address. Click the button below to continue on to ${process.env.NEXT_PUBLIC_APP_NAME}.`}
+          subtitle={`Thanks for verifying your email address. Click the button below to continue on to ${process.env.NUXT_ENV_APP_NAME}.`}
         >
           {return_to && (
             <v-btn color="primary" variant="contained" block depressed href={return_to}>
-              Continue to {process.env.NEXT_PUBLIC_APP_NAME}
+              Continue to {process.env.NUXT_ENV_APP_NAME}
             </v-btn>
           )}
         </FormWrapper>
