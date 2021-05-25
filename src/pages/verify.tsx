@@ -7,6 +7,7 @@ import KratosUi from '~/components/kratos/ui';
 @Component
 export default class VerifyPage extends Vue {
   flow!: VerificationFlow;
+  return_to?: string;
 
   async asyncData({ query, req, redirect, error }: Context) {
     // If we don't have a return_to or flow parameter, something is wrong
@@ -26,6 +27,7 @@ export default class VerifyPage extends Vue {
     try {
       const res = await kratos_client.getSelfServiceVerificationFlow(String(query.flow));
       return {
+        return_to: process.env.POST_VERIFY_REDIRECT,
         flow: res.data,
       };
     } catch (err) {
@@ -38,7 +40,7 @@ export default class VerifyPage extends Vue {
 
   render() {
     if (this.flow.state === 'passed_challenge') {
-      let return_to = '';
+      let return_to = this.return_to;
       if (this.flow.request_url) {
         const request_url = new URL(this.flow.request_url);
         return_to = request_url.searchParams.get('return_to') as string;
