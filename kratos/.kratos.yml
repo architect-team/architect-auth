@@ -11,6 +11,13 @@ selfservice:
       enabled: true
     registration:
       lifespan: 10m
+      after:
+        oidc:
+          hooks:
+            - hook: session
+        password:
+          hooks:
+            - hook: session
     recovery:
       enabled: true
       lifespan: 10m
