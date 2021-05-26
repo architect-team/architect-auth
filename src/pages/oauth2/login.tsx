@@ -1,11 +1,11 @@
-import crypto from 'crypto';
 import { Context } from '@nuxt/types';
-import { AdminApi as HydraAdminApi, Configuration as HydraConfiguration } from '@oryd/hydra-client';
-import { Vue, Component } from 'nuxt-property-decorator';
 import {
   Configuration as KratosConfiguration,
   PublicApi as KratosPublicApi,
-} from '@oryd/kratos-client';
+} from '@ory/kratos-client';
+import { AdminApi as HydraAdminApi, Configuration as HydraConfiguration } from '@oryd/hydra-client';
+import crypto from 'crypto';
+import { Component, Vue } from 'nuxt-property-decorator';
 
 const SESSION_STATE_KEY = 'hydra_login_state';
 
@@ -66,7 +66,6 @@ export default class LoginPage extends Vue {
           basePath: process.env.KRATOS_PUBLIC_URL,
         })
       );
-      console.log(req.headers);
       const { data: login_session } = await kratos_public_client.whoami(
         String(req.headers.cookie),
         String(req.headers.authorization)

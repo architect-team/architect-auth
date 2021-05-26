@@ -1,23 +1,16 @@
 import { Context } from '@nuxt/types';
-import { Configuration, PublicApi, RecoveryFlow } from '@oryd/kratos-client';
+import { Configuration, PublicApi, RecoveryFlow } from '@ory/kratos-client';
 import { Component } from 'vue-property-decorator';
-import { VueComponent } from '~/vue-component';
 import FormWrapper from '~/components/form-wrapper';
-import KratosForm from '~/components/kratos-form';
+import KratosUi from '~/components/kratos/ui';
+import { VueComponent } from '~/vue-component';
 
 @Component
 export default class RecoverPage extends VueComponent<any> {
   flow!: RecoveryFlow;
-  return_to!: string;
 
   async asyncData({ query, req, redirect, error }: Context) {
-    // If we have a return_to address, store it and initiate login flow
-    if (query.return_to) {
-      req.session.return_to = query.return_to;
-      return redirect(`/self-service/recovery/browser?return_to=${req.session.return_to}`);
-    }
-
-    // If we don't have a return_to or flow parameter, something is wrong
+    // If we don't have a flow parameter, something is wrong
     if (!query.flow) {
       return error({
         statusCode: 400,
@@ -35,7 +28,6 @@ export default class RecoverPage extends VueComponent<any> {
       const res = await kratos_client.getSelfServiceRecoveryFlow(String(query.flow));
       return {
         flow: res.data,
-        return_to: req.session.return_to,
       };
     } catch (err) {
       return error({
@@ -46,27 +38,24 @@ export default class RecoverPage extends VueComponent<any> {
   }
 
   render() {
+    const request_url = new URL(this.flow.request_url);
+    const return_to = request_url.searchParams.get('return_to') as string;
+
     return (
-      <FormWrapper
-        title="Forgot your password?"
-        subtitle="Enter your email address and we will send you instructions to reset your password"
-      >
-        {(this.flow.messages || []).map((message, index) => (
-          <v-alert key={index} type={message.type} text class="mb-4">
-            {message.text}
-          </v-alert>
-        ))}
+      <div>
+        <FormWrapper
+          title="Forgot your password?"
+          subtitle="Enter your email address and we will send you instructions to reset your password"
+        >
+          <KratosUi ui={this.flow.ui} />
+        </FormWrapper>
 
-        {Object.values(this.flow.methods || {}).map((method) => (
-          <KratosForm config={method.config} method={method.method} />
-        ))}
-
-        <div class="text-center">
-          <a href={`/self-service/login/browser?return_to=${encodeURIComponent(this.return_to)}`}>
+        <div class="text-center mt-4">
+          <a href={`/self-service/login/browser?return_to=${encodeURIComponent(return_to)}`}>
             Back to login
           </a>
         </div>
-      </FormWrapper>
+      </div>
     );
   }
 }

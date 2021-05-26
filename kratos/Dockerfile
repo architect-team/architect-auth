@@ -1,4 +1,4 @@
-FROM oryd/kratos:v0.5.5-alpha.1
+FROM oryd/kratos:v0.6.1-alpha.1
 
 USER root
 RUN apk add --no-cache postgresql-client jq

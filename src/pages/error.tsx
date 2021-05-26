@@ -1,5 +1,5 @@
 import { Context } from '@nuxt/types';
-import { Configuration, PublicApi } from '@oryd/kratos-client';
+import { Configuration, PublicApi } from '@ory/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 
 @Component
@@ -17,7 +17,6 @@ export default class ErrorPage extends Vue {
       })
     );
     const res = await kratos_client.getSelfServiceError(String(query.error));
-    console.error(res.data.errors);
     const first = (res.data.errors as any)[0];
     return error({
       statusCode: first.code,
