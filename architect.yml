@@ -119,6 +119,11 @@ services:
       GITHUB_CLIENT_ID: ${{ parameters.GITHUB_CLIENT_ID }}
       GITHUB_CLIENT_SECRET: ${{ parameters.GITHUB_CLIENT_SECRET }}
 
+      # expose_kratos_hack TODO remove
+      KRATOS: ${{ ingresses.kratos-public.url }}
+      HYDRA: ${{ ingresses.hydra-public.url }}
+      HYDRA_ADMIN: ${{ ingresses.hydra-admin.url }}
+
       # Used by the psql client during startup
       PGHOST: ${{ dependencies['architect/postgres'].interfaces.postgres.host }}
       PGPORT: ${{ dependencies['architect/postgres'].interfaces.postgres.port }}
@@ -161,6 +166,7 @@ services:
       POST_VERIFY_REDIRECT: ${{ parameters.POST_VERIFY_REDIRECT }}
       NUXT_ENV_LOGO_URL: ${{ parameters.LOGO_URL }}
       NUXT_ENV_APP_NAME: ${{ parameters.APP_NAME }}
+      ARCHITECT_CLOUD_APP_URL: '' # http://app.arc.localhost:1024 # TODO: update
     interfaces:
       main: 3000
     debug:
@@ -180,6 +186,12 @@ interfaces:
   kratos-admin:
     url: ${{ services.kratos.interfaces.admin.url }}
     description: Administrative endpoints for the Kratos service (https://ory.sh/kratos/)
+  kratos-public:
+    url: ${{ services.kratos.interfaces.public.url }}
+    description: Public endpoint for the Kratos service (https://ory.sh/kratos/)
   hydra-admin:
     url: ${{ services.hydra.interfaces.admin.url }}
     description: Administrative endpoints for the Hydra service (https://ory.sh/hydra/)
+  hydra-public:
+    url: ${{ services.hydra.interfaces.public.url }}
+    description: Public endpoint for the Kratos service (https://ory.sh/kratos/)
