@@ -96,6 +96,7 @@ services:
         OAUTH2_EXPOSE_INTERNAL_ERRORS: true
         SERVE_ADMIN_CORS_DEBUG: true
         SERVE_PUBLIC_CORS_DEBUG: true
+        LOG_LEAK_SENSITIVE_VALUES: true
         LOG_LEVEL: debug
 
   kratos:

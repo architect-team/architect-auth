@@ -46,7 +46,7 @@ curl --location --request POST 'http://localhost/clients' \
     "response_types": ["code"],
     "scope": "offline offline_access refresh_token openid email profile",
     "audience": ["my-audience"],
-    "token_endpoint_auth_method": "client_secret_post"
+    "token_endpoint_auth_method": "none"
   }'
 ```
 
