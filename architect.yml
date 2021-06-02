@@ -189,12 +189,6 @@ interfaces:
   kratos-admin:
     url: ${{ services.kratos.interfaces.admin.url }}
     description: Administrative endpoints for the Kratos service (https://ory.sh/kratos/)
-  # kratos-public:
-  #   url: ${{ services.kratos.interfaces.public.url }}
-  #   description: Public endpoint for the Kratos service (https://ory.sh/kratos/)
   hydra-admin:
     url: ${{ services.hydra.interfaces.admin.url }}
     description: Administrative endpoints for the Hydra service (https://ory.sh/hydra/)
-  # hydra-public:
-  #   url: ${{ services.hydra.interfaces.public.url }}
-  #   description: Public endpoint for the Kratos service (https://ory.sh/kratos/)
