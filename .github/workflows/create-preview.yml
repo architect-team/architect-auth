@@ -9,8 +9,6 @@ env:
   ACCOUNT_NAME: architect
   PREVIEW_PLATFORM: public
   PREVIEW_TAG: preview-${{ github.head_ref }}
-  POST_VERIFY_REDIRECT: ''
-  POST_LOGOUT_REDIRECT: ''
 
 jobs:
   architect_create_preview:

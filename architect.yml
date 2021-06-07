@@ -53,10 +53,10 @@ parameters:
     default: 'false'
   POST_VERIFY_REDIRECT:
     description: When a user completes account verification, they will be prompted to redirect to this url by default.
-    required: true
+    required: false
   POST_LOGOUT_REDIRECT:
     description: When a user agent requests to logout, it will be redirected to this url afterwards per default.
-    required: true
+    required: false
 
 services:
   hydra:
