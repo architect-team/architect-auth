@@ -43,7 +43,9 @@ export default class VerifyPage extends Vue {
       let return_to = this.return_to;
       if (this.flow.request_url) {
         const request_url = new URL(this.flow.request_url);
-        return_to = request_url.searchParams.get('return_to') as string;
+        if (request_url.searchParams.get('return_to')) {
+          return_to = request_url.searchParams.get('return_to') as string;
+        }
       }
 
       return (
@@ -51,11 +53,9 @@ export default class VerifyPage extends Vue {
           title="Verification successful"
           subtitle={`Thanks for verifying your email address. Click the button below to continue on to ${process.env.NUXT_ENV_APP_NAME}.`}
         >
-          {return_to && (
-            <v-btn color="primary" variant="contained" block depressed href={return_to}>
-              Continue to {process.env.NUXT_ENV_APP_NAME}
-            </v-btn>
-          )}
+          <v-btn color="primary" variant="contained" block depressed href={return_to}>
+            Continue to {process.env.NUXT_ENV_APP_NAME}
+          </v-btn>
         </FormWrapper>
       );
     } else {

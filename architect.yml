@@ -53,10 +53,10 @@ parameters:
     default: 'false'
   POST_VERIFY_REDIRECT:
     description: When a user completes account verification, they will be prompted to redirect to this url by default.
-    required: false
+    required: true
   POST_LOGOUT_REDIRECT:
     description: When a user agent requests to logout, it will be redirected to this url afterwards per default.
-    required: false
+    required: true
 
 services:
   hydra:
@@ -169,7 +169,6 @@ services:
       POST_VERIFY_REDIRECT: ${{ parameters.POST_VERIFY_REDIRECT }}
       NUXT_ENV_LOGO_URL: ${{ parameters.LOGO_URL }}
       NUXT_ENV_APP_NAME: ${{ parameters.APP_NAME }}
-      ARCHITECT_CLOUD_APP_URL: '' # http://app.arc.localhost:1024 # TODO: update
     interfaces:
       main: 3000
     debug:
