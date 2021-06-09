@@ -180,6 +180,10 @@ services:
         src:
           host_path: ./src/
           mount_path: /app/src/
+        config:
+          mount_path: /app/src/nuxt.config.ts
+          host_path: ./nuxt.config.ts
+          readonly: true
 
 interfaces:
   frontend:
