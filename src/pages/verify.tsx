@@ -38,7 +38,7 @@ export default class VerifyPage extends Vue {
 
   render() {
     if (this.flow.state === 'passed_challenge') {
-      // This will only be hit if verification was already completed and the user resends the verification via the flow beflow
+      // This will only be hit if verification was already completed and the user resends the verification via the flow below
       return (
         <FormWrapper
           title="Verification successful"
