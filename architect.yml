@@ -51,9 +51,6 @@ parameters:
   LOG_LEAK_SENSITIVE_VALUES:
     description: Turn on to show sensitive values in logs, like verification codes, etc.
     default: 'false'
-  POST_LOGOUT_REDIRECT:
-    description: When a user agent requests to logout, it will be redirected to this url afterwards per default.
-    required: false
 
 services:
   hydra:
@@ -68,7 +65,6 @@ services:
       URLS_CONSENT: ${{ ingresses.frontend.url }}/oauth2/consent
       URLS_LOGIN: ${{ ingresses.frontend.url }}/oauth2/login
       URLS_LOGOUT: ${{ ingresses.frontend.url }}/oauth2/logout
-      URLS_POST_LOGOUT_REDIRECT: ${{ parameters.POST_LOGOUT_REDIRECT }}
       SECRETS_SYSTEM: ${{ parameters.SIGNING_SECRET }}
 
       # Used by psql client for DB upsert
@@ -176,10 +172,6 @@ services:
         src:
           host_path: ./src/
           mount_path: /app/src/
-        config:
-          mount_path: /app/src/nuxt.config.ts
-          host_path: ./nuxt.config.ts
-          readonly: true
 
 interfaces:
   frontend:
