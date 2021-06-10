@@ -178,7 +178,6 @@ services:
       POST_VERIFY_REDIRECT: ${{ parameters.POST_VERIFY_REDIRECT }}
       NUXT_ENV_LOGO_URL: ${{ parameters.LOGO_URL }}
       NUXT_ENV_APP_NAME: ${{ parameters.APP_NAME }}
-      DEBUG: nuxt:* # TODO: remove
     interfaces:
       main: 3000
     debug:
