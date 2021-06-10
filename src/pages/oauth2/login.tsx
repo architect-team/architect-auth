@@ -1,7 +1,7 @@
 import { Context } from '@nuxt/types';
 import {
   Configuration as KratosConfiguration,
-  PublicApi as KratosPublicApi,
+  PublicApi as KratosPublicApi
 } from '@ory/kratos-client';
 import { AdminApi as HydraAdminApi, Configuration as HydraConfiguration } from '@oryd/hydra-client';
 import crypto from 'crypto';
@@ -57,6 +57,7 @@ export default class LoginPage extends Vue {
 
         const destination = new URL(`/self-service/login/browser`, process.env.BASE_URL);
         destination.searchParams.set('return_to', return_to.toString());
+        destination.searchParams.set('after_verification_return_to', (login_request.client.allowed_cors_origins || [])[0]);
         return redirect(destination.toString());
       }
 

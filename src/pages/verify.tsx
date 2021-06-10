@@ -7,10 +7,9 @@ import KratosUi from '~/components/kratos/ui';
 @Component
 export default class VerifyPage extends Vue {
   flow!: VerificationFlow;
-  return_to?: string;
 
   async asyncData({ query, req, redirect, error }: Context) {
-    // If we don't have a return_to or flow parameter, something is wrong
+    // If we don't have a flow parameter, something is wrong
     if (!query.flow) {
       return error({
         statusCode: 400,
@@ -27,7 +26,6 @@ export default class VerifyPage extends Vue {
     try {
       const res = await kratos_client.getSelfServiceVerificationFlow(String(query.flow));
       return {
-        return_to: process.env.POST_VERIFY_REDIRECT,
         flow: res.data,
       };
     } catch (err) {
@@ -40,22 +38,12 @@ export default class VerifyPage extends Vue {
 
   render() {
     if (this.flow.state === 'passed_challenge') {
-      let return_to = this.return_to;
-      if (this.flow.request_url) {
-        const request_url = new URL(this.flow.request_url);
-        if (request_url.searchParams.get('return_to')) {
-          return_to = request_url.searchParams.get('return_to') as string;
-        }
-      }
-
+      // This will only be hit if verification was already completed and the user resends the verification via the flow below
       return (
         <FormWrapper
           title="Verification successful"
-          subtitle={`Thanks for verifying your email address. Click the button below to continue on to ${process.env.NUXT_ENV_APP_NAME}.`}
+          subtitle={`Thanks for verifying your email address.`}
         >
-          <v-btn color="primary" variant="contained" block depressed href={return_to}>
-            Continue to {process.env.NUXT_ENV_APP_NAME}
-          </v-btn>
         </FormWrapper>
       );
     } else {
