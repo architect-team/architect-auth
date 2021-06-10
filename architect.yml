@@ -11,7 +11,6 @@ keywords:
   - oauth2
 
 dependencies:
-  architect/smtp-server: latest # TODO: replace this for remote with something more legit than maildev?
   architect/postgres: '13'
 
 parameters:
@@ -57,6 +56,16 @@ parameters:
   POST_LOGOUT_REDIRECT:
     description: When a user agent requests to logout, it will be redirected to this url afterwards per default.
     required: false
+
+  # SMTP parameters
+  SMTP_HOST:
+    required: true
+  SMTP_PORT:
+    required: true
+  SMTP_USERNAME:
+    required: true
+  SMTP_PASSWORD:
+    required: true
 
 services:
   hydra:
@@ -108,7 +117,7 @@ services:
       GITHUB_SCHEMA_MAPPER: file:./kratos/github.schema.jsonnet
       GITLAB_SCHEMA_MAPPER: file:./kratos/gitlab.schema.jsonnet
       DSN: ${{ dependencies['architect/postgres'].interfaces.postgres.url }}/${{ parameters.KRATOS_DB_NAME }}?sslmode=disable
-      COURIER_SMTP_CONNECTION_URI: ${{ dependencies['architect/smtp-server'].interfaces.smtp.url }}
+      COURIER_SMTP_CONNECTION_URI: smtps://${{ parameters.SMTP_USERNAME }}:${{ parameters.SMTP_PASSWORD }}@${{ parameters.SMTP_HOST }}:${{ parameters.SMTP_PORT }}
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.SMTP_FROM_ADDRESS }}
       SERVE_PUBLIC_BASE_URL: ${{ ingresses.frontend.url }}
       SERVE_ADMIN_BASE_URL: ${{ services.kratos.interfaces.admin.url }}
