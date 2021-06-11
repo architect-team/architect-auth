@@ -82,6 +82,7 @@ const config = {
 
     '/.well-known': process.env.HYDRA_PUBLIC_URL,
     '/oauth2/auth': process.env.HYDRA_PUBLIC_URL,
+    '/oauth2/fallbacks': process.env.HYDRA_PUBLIC_URL,
     '/oauth2/token': process.env.HYDRA_PUBLIC_URL,
     '/oauth2/revoke': process.env.HYDRA_PUBLIC_URL,
     '/oauth2/sessions': process.env.HYDRA_PUBLIC_URL,

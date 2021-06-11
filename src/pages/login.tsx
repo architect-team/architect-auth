@@ -25,9 +25,9 @@ export default class LoginPage extends Vue {
     );
 
     try {
-      const res = await kratos_client.getSelfServiceLoginFlow(String(query.flow));
+      const { data } = await kratos_client.getSelfServiceLoginFlow(String(query.flow));
       return {
-        flow: res.data,
+        flow: data,
       };
     } catch (err) {
       return error({
@@ -44,7 +44,8 @@ export default class LoginPage extends Vue {
 
     const request_url = new URL(this.flow.request_url);
     const return_to = request_url.searchParams.get('return_to') as string;
-
+    // https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion/#specify-redirection-url-during-registration
+    const verification_return_to = request_url.searchParams.get('after_verification_return_to') as string;
     return (
       <div>
         <FormWrapper
@@ -97,7 +98,7 @@ export default class LoginPage extends Vue {
           </v-col>
           <v-col sm="6" cols="12" class="text-right">
             <a
-              href={`/self-service/registration/browser?return_to=${encodeURIComponent(return_to)}`}
+              href={`/self-service/registration/browser?return_to=${encodeURIComponent(return_to)}&after_verification_return_to=${encodeURIComponent(verification_return_to)}`}
             >
               Don't have an account? Sign up.
             </a>

@@ -3,7 +3,7 @@ import {
   Configuration,
   PublicApi,
   RegistrationFlow,
-  UiNodeInputAttributes,
+  UiNodeInputAttributes
 } from '@ory/kratos-client';
 import { Component, Vue } from 'nuxt-property-decorator';
 import FormWrapper from '~/components/form-wrapper';
