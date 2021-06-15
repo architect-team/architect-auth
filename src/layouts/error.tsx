@@ -13,6 +13,12 @@ export default class ErrorLayout extends Vue {
   })
   error?: RenderedError;
 
+  head() {
+    return {
+      title: this.$config.app_name
+    }
+  }
+
   render() {
     const theme = this.$vuetify.theme.currentTheme;
     const error = this.error?.statusCode === 404

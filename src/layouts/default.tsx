@@ -2,6 +2,12 @@ import { Component, Vue } from 'vue-property-decorator';
 
 @Component
 export default class DefaultLayout extends Vue {
+  head() {
+    return {
+      title: this.$config.app_name
+    }
+  }
+
   render() {
     const theme = this.$vuetify.theme.currentTheme;
     const smThreshold = this.$vuetify.breakpoint.thresholds.xs;

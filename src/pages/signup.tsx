@@ -59,7 +59,7 @@ export default class SignupPage extends Vue {
       <div>
         <FormWrapper
           title="Welcome"
-          subtitle={`Sign up below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
+          subtitle={`Sign up below to continue to ${this.$config.app_name}`}
         >
           {messages?.map((message) => (
             <KratosMessage message={message} />
