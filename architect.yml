@@ -10,9 +10,6 @@ keywords:
   - openid
   - oauth2
 
-dependencies:
-  architect/postgres: '13'
-
 parameters:
   LOG_LEVEL:
     description: One of trace, debug, info, warning, error, fatal, or panic
@@ -51,6 +48,14 @@ parameters:
     description: Turn on to show sensitive values in logs, like verification codes, etc.
     default: 'false'
 
+  # Database parameters
+  POSTGRES_HOST:
+    required: false
+  POSTGRES_USER:
+    default: postgres
+  POSTGRES_PASSWORD:
+    default: architect
+
   # SMTP parameters
   SMTP_HOST:
     required: true
@@ -68,7 +73,7 @@ services:
     environment:
       HYDRA_CONFIG: file:./hydra/.hydra.yml
       LOG_LEVEL: ${{ parameters.LOG_LEVEL }}
-      DSN: ${{ dependencies['architect/postgres'].interfaces.postgres.url }}/${{ parameters.HYDRA_DB_NAME }}?sslmode=disable
+      DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.HYDRA_DB_NAME }}?sslmode=disable
       URLS_SELF_ISSUER: ${{ ingresses.frontend.url }}
       URLS_SELF_PUBLIC: ${{ ingresses.frontend.url }}
       URLS_CONSENT: ${{ ingresses.frontend.url }}/oauth2/consent
@@ -77,10 +82,10 @@ services:
       SECRETS_SYSTEM: ${{ parameters.SIGNING_SECRET }}
 
       # Used by psql client for DB upsert
-      PGHOST: ${{ dependencies['architect/postgres'].interfaces.postgres.host }}
-      PGPORT: ${{ dependencies['architect/postgres'].interfaces.postgres.port }}
-      PGUSER: ${{ dependencies['architect/postgres'].interfaces.postgres.username }}
-      PGPASSWORD: ${{ dependencies['architect/postgres'].interfaces.postgres.password }}
+      PGHOST: ${{ services.auth-db.interfaces.postgres.host }}
+      PGPORT: ${{ services.auth-db.interfaces.postgres.port }}
+      PGUSER: ${{ services.auth-db.interfaces.postgres.username }}
+      PGPASSWORD: ${{ services.auth-db.interfaces.postgres.password }}
     interfaces:
       public: 4444
       admin: 4445
@@ -109,7 +114,7 @@ services:
       DEFAULT_IDENTITY_SCHEMA: file:./kratos/identity.schema.json
       GITHUB_SCHEMA_MAPPER: file:./kratos/github.schema.jsonnet
       GITLAB_SCHEMA_MAPPER: file:./kratos/gitlab.schema.jsonnet
-      DSN: ${{ dependencies['architect/postgres'].interfaces.postgres.url }}/${{ parameters.KRATOS_DB_NAME }}?sslmode=disable
+      DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.KRATOS_DB_NAME }}?sslmode=disable
       COURIER_SMTP_CONNECTION_URI: smtps://${{ parameters.SMTP_USERNAME }}:${{ parameters.SMTP_PASSWORD }}@${{ parameters.SMTP_HOST }}:${{ parameters.SMTP_PORT }}
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.SMTP_FROM_ADDRESS }}
       SERVE_PUBLIC_BASE_URL: ${{ ingresses.frontend.url }}
@@ -128,10 +133,10 @@ services:
       GITHUB_CLIENT_SECRET: ${{ parameters.GITHUB_CLIENT_SECRET }}
 
       # Used by the psql client during startup
-      PGHOST: ${{ dependencies['architect/postgres'].interfaces.postgres.host }}
-      PGPORT: ${{ dependencies['architect/postgres'].interfaces.postgres.port }}
-      PGUSER: ${{ dependencies['architect/postgres'].interfaces.postgres.username }}
-      PGPASSWORD: ${{ dependencies['architect/postgres'].interfaces.postgres.password }}
+      PGHOST: ${{ services.auth-db.interfaces.postgres.host }}
+      PGPORT: ${{ services.auth-db.interfaces.postgres.port }}
+      PGUSER: ${{ services.auth-db.interfaces.postgres.username }}
+      PGPASSWORD: ${{ services.auth-db.interfaces.postgres.password }}
     interfaces:
       public: 4433
       admin: 4434
@@ -154,6 +159,19 @@ services:
         HASHERS_BCRYPT_COST: 4
         LOG_LEVEL: info
         SERVE_PUBLIC_CORS_DEBUG: true
+
+  auth-db:
+    image: postgres:11
+    interfaces:
+      postgres:
+        host: ${{ parameters.POSTGRES_HOST }}
+        port: 5432
+        protocol: postgres
+        username: ${{ parameters.POSTGRES_USER }}
+        password: ${{ parameters.POSTGRES_PASSWORD }}
+    environment:
+      POSTGRES_USER: ${{ parameters.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ parameters.POSTGRES_PASSWORD }}
 
   app:
     build:
