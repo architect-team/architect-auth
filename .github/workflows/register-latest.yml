@@ -16,9 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
       - name: Install Architect CLI
-        run: npm install -g @architect-io/cli
+        run: sudo npm install -g @architect-io/cli
       - name: Login to Architect Cloud
         run: architect login
       - name: Tag and Register Component
