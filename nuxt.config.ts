@@ -12,10 +12,12 @@ const config = {
     { path: '/oauth2/consent', handler: '~/server-middleware/body-parser' },
   ],
 
+  publicRuntimeConfig: {
+    app_name: process.env.NUXT_ENV_APP_NAME
+  },
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: `%s - ${process.env.NUXT_ENV_APP_NAME}`,
-    title: process.env.NUXT_ENV_APP_NAME,
     htmlAttrs: {
       lang: 'en',
     },

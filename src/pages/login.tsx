@@ -50,7 +50,7 @@ export default class LoginPage extends Vue {
       <div>
         <FormWrapper
           title="Welcome back"
-          subtitle={`Log in below to continue to ${process.env.NUXT_ENV_APP_NAME}`}
+          subtitle={`Log in below to continue to ${this.$config.app_name}`}
         >
           {this.flow.ui.messages?.map((message) => (
             <KratosMessage message={message} />
