@@ -31,10 +31,10 @@ parameters:
     default: no-reply@architect.io
   github_client_id:
     description: Client ID of a Github application that can request to act on behalf of users (does nothing unless you enable OIDC in ./kratos/.kratos.yml)
-    required: 'false'
+    required: false
   github_client_secret:
     description: Client secret of a Github application that can request to act on behalf of users (does nothing unless you enable OIDC in ./kratos/.kratos.yml)
-    required: 'false'
+    required: false
   logo_url:
     description: URL of an image to be rendered as the logo on the authorization web pages
     default: /platform-icon.png
@@ -43,7 +43,7 @@ parameters:
     default: Architect Cloud
   theme_primary_color:
     description: A hex color to be used as the primary theme color for the application
-    required: 'false'
+    required: false
   log_leak_sensitive_values:
     description: Turn on to show sensitive values in logs, like verification codes, etc.
     default: 'false'
