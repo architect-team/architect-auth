@@ -12,7 +12,6 @@ serve:
         - Authorization
       exposed_headers:
         - Content-Type
-      allowed_origins: ${{ ingresses.frontend.consumers }}
 
   cookies:
     same_site_mode: Lax
