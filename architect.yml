@@ -74,6 +74,7 @@ services:
       context: ./hydra/
     environment:
       HYDRA_CONFIG: file:./hydra/.hydra.yml
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
       LOG_LEVEL: ${{ parameters.log_level }}
       DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.hydra_db_name }}?sslmode=disable
       URLS_SELF_ISSUER: ${{ ingresses.frontend.url }}
@@ -122,6 +123,7 @@ services:
       COURIER_SMTP_CONNECTION_URI: smtps://${{ parameters.smtp_username }}:${{ parameters.smtp_password }}@${{ parameters.smtp_host }}:${{ parameters.smtp_port }}
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.smtp_from_address }}
       SERVE_PUBLIC_BASE_URL: ${{ ingresses.frontend.url }}
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
       SERVE_ADMIN_BASE_URL: ${{ services.kratos.interfaces.admin.url }}
       SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${{ ingresses.frontend.url }}
       SELFSERVICE_FLOWS_LOGIN_UI_URL: ${{ ingresses.frontend.url }}/login
