@@ -74,7 +74,6 @@ services:
       context: ./hydra/
     environment:
       HYDRA_CONFIG: file:./hydra/.hydra.yml
-      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
       LOG_LEVEL: ${{ parameters.log_level }}
       DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.hydra_db_name }}?sslmode=disable
       URLS_SELF_ISSUER: ${{ ingresses.frontend.url }}
@@ -83,6 +82,7 @@ services:
       URLS_LOGIN: ${{ ingresses.frontend.url }}/oauth2/login
       URLS_LOGOUT: ${{ ingresses.frontend.url }}/oauth2/logout
       SECRETS_SYSTEM: ${{ parameters.signing_secret }}
+      CONSUMERS: ${{ ingresses.frontend.consumers }}
 
       # Used by psql client for DB upsert
       PGHOST: ${{ services.auth-db.interfaces.postgres.host }}
@@ -99,6 +99,7 @@ services:
         echo "$HYDRA_CONFIG" > /etc/config/hydra/.hydra.yml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.hydra_db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.hydra_db_name }}')\gexec" | psql > /dev/null
+        export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=$(jq -n --raw-output --argjson CONSUMERS "$CONSUMERS" '$CONSUMERS | join(",")')
         hydra migrate -c /etc/config/hydra/.hydra.yml sql -e --yes
         hydra serve all -c /etc/config/hydra/.hydra.yml --dangerous-force-http
     debug:
@@ -123,7 +124,6 @@ services:
       COURIER_SMTP_CONNECTION_URI: smtps://${{ parameters.smtp_username }}:${{ parameters.smtp_password }}@${{ parameters.smtp_host }}:${{ parameters.smtp_port }}
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.smtp_from_address }}
       SERVE_PUBLIC_BASE_URL: ${{ ingresses.frontend.url }}
-      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: ${{ ingresses.frontend.consumers }}
       SERVE_ADMIN_BASE_URL: ${{ services.kratos.interfaces.admin.url }}
       SELFSERVICE_DEFAULT_BROWSER_RETURN_URL: ${{ ingresses.frontend.url }}
       SELFSERVICE_FLOWS_LOGIN_UI_URL: ${{ ingresses.frontend.url }}/login
@@ -157,6 +157,7 @@ services:
         [[ -n "$GITHUB_CLIENT_ID" ]] && yq eval -i '.selfservice.methods.oidc.config.providers += {"id": "github", "provider": "github", "client_id": env(GITHUB_CLIENT_ID), "client_secret": env(GITHUB_CLIENT_SECRET), "mapper_url": "file:///home/ory/github.schema.jsonnet", "scope": ["user:email"]}' $HOME/.kratos.yaml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.kratos_db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.kratos_db_name }}')\gexec" | psql > /dev/null
+        export SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=$(jq -n --raw-output --argjson CONSUMERS "$CONSUMERS" '$CONSUMERS | join(",")')
         export SELFSERVICE_WHITELISTED_RETURN_URLS=$(jq -n --raw-output --argjson CONSUMERS "$CONSUMERS" --argjson BASE_URL "[\"$SERVE_PUBLIC_BASE_URL\"]" '$CONSUMERS + $BASE_URL | join(",")')
         kratos migrate sql -e --yes
         kratos serve -c $HOME/.kratos.yaml --watch-courier

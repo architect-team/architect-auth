@@ -1,4 +1,4 @@
-FROM oryd/hydra:v1.10-alpine
+FROM oryd/hydra:v1.10.5-alpine
 
 USER root
 RUN apk add --no-cache postgresql-client jq
