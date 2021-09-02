@@ -1,9 +1,9 @@
 <p align="center">
-  <a href="//architect.io" target="blank"><img src="https://www.architect.io/img/logo.svg" width="320" alt="Architect Logo" /></a>
+  <a href="//architect.io" target="blank"><img src="https://www.architect.io/img/logo.svg" width="480" alt="Architect Logo" /></a>
 </p>
 
 <p align="center">
-  A dynamic microservices framework for building, connecting, and deploying cloud-native applications.
+  Self-service cloud environments for everyone. Achieve deployment, networking, and security automation all at once with Architect.
 </p>
 
 ---
