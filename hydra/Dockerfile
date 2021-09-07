@@ -6,4 +6,4 @@ RUN mkdir -p /etc/config/hydra/
 RUN chown ory:ory /etc/config/hydra/
 USER ory
 
-ENTRYPOINT [""]
+ENTRYPOINT []
