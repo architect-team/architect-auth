@@ -51,6 +51,14 @@ parameters:
   # Database parameters
   postgres_host:
     required: false
+  postgres_port:
+    default: 5432
+  postgres_ca:
+    required: false
+  postgres_cert:
+    required: false
+  postgres_key:
+    required: false
   postgres_user:
     default: postgres
   postgres_password:
@@ -85,10 +93,17 @@ services:
       CONSUMERS: ${{ ingresses.frontend.consumers }}
 
       # Used by psql client for DB upsert
+      # https://www.postgresql.org/docs/11/libpq-envars.html
       PGHOST: ${{ services.auth-db.interfaces.postgres.host }}
       PGPORT: ${{ services.auth-db.interfaces.postgres.port }}
       PGUSER: ${{ services.auth-db.interfaces.postgres.username }}
       PGPASSWORD: ${{ services.auth-db.interfaces.postgres.password }}
+      PGSSLROOTCERT: /certs/ca.crt
+      PGSSLCERT: /certs/client.crt
+      PGSSLKEY: /certs/client.key
+      PGSSLROOTCERT_CONTENTS: ${{ parameters.postgres_ca }}
+      PGSSLCERT_CONTENTS: ${{ parameters.postgres_cert }}
+      PGSSLKEY_CONTENTS: ${{ parameters.postgres_key }}
     interfaces:
       public: 4444
       admin: 4445
@@ -96,6 +111,10 @@ services:
       - sh
       - -c # TODO: fix --dangerous-force-http for remote
       - |
+        mkdir -p /certs
+        echo "$PGSSLROOTCERT_CONTENTS" > "$PGSSLROOTCERT"
+        echo "$PGSSLCERT_CONTENTS" > "$PGSSLCERT"
+        echo "$PGSSLKEY_CONTENTS" > "$PGSSLKEY"
         echo "$HYDRA_CONFIG" > /etc/config/hydra/.hydra.yml
         sleep 5
         echo "SELECT 'CREATE DATABASE ${{ parameters.hydra_db_name }}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${{ parameters.hydra_db_name }}')\gexec" | psql > /dev/null
@@ -139,10 +158,17 @@ services:
       GITHUB_CLIENT_SECRET: ${{ parameters.github_client_secret }}
 
       # Used by the psql client during startup
+      # https://www.postgresql.org/docs/11/libpq-envars.html
       PGHOST: ${{ services.auth-db.interfaces.postgres.host }}
       PGPORT: ${{ services.auth-db.interfaces.postgres.port }}
       PGUSER: ${{ services.auth-db.interfaces.postgres.username }}
       PGPASSWORD: ${{ services.auth-db.interfaces.postgres.password }}
+      PGSSLROOTCERT: /certs/ca.crt
+      PGSSLCERT: /certs/client.crt
+      PGSSLKEY: /certs/client.key
+      PGSSLROOTCERT_CONTENTS: ${{ parameters.postgres_ca }}
+      PGSSLCERT_CONTENTS: ${{ parameters.postgres_cert }}
+      PGSSLKEY_CONTENTS: ${{ parameters.postgres_key }}
     interfaces:
       public: 4433
       admin: 4434
@@ -150,6 +176,10 @@ services:
       - sh
       - -c
       - |
+        mkdir -p /certs
+        echo "$PGSSLROOTCERT_CONTENTS" > "$PGSSLROOTCERT"
+        echo "$PGSSLCERT_CONTENTS" > "$PGSSLCERT"
+        echo "$PGSSLKEY_CONTENTS" > "$PGSSLKEY"
         echo "$DEFAULT_IDENTITY_SCHEMA" > $HOME/identity.schema.json
         echo "$GITHUB_SCHEMA_MAPPER" > $HOME/github.schema.jsonnet
         echo "$GITLAB_SCHEMA_MAPPER" > $HOME/gitlab.schema.jsonnet
@@ -168,17 +198,21 @@ services:
         SERVE_PUBLIC_CORS_DEBUG: true
 
   auth-db:
-    image: postgres:11
+    image: bitnami/postgresql:11
     interfaces:
       postgres:
         host: ${{ parameters.postgres_host }}
-        port: 5432
+        port: ${{ parameters.postgres_port }}
         protocol: postgres
         username: ${{ parameters.postgres_user }}
         password: ${{ parameters.postgres_password }}
     environment:
-      POSTGRES_USER: ${{ parameters.postgres_user }}
-      POSTGRES_PASSWORD: ${{ parameters.postgres_password }}
+      POSTGRESQL_USERNAME: ${{ parameters.postgres_user }}
+      POSTGRESQL_PASSWORD: ${{ parameters.postgres_password }}
+      # POSTGRESQL_ENABLE_TLS: 'yes'
+      # POSTGRESQL_TLS_CERT_FILE: /opt/bitnami/postgresql/certs/server.crt
+      # POSTGRESQL_TLS_KEY_FILE: /opt/bitnami/postgresql/certs/server.key
+      # POSTGRESQL_TLS_CA_FILE: /opt/bitnami/postgresql/certs/ca.crt
 
   app:
     build:
