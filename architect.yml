@@ -59,6 +59,12 @@ parameters:
     required: false
   postgres_key:
     required: false
+  postgres_ca_filename:
+    required: false
+  postgres_cert_filename:
+    required: false
+  postgres_key_filename:
+    required: false
   postgres_user:
     default: postgres
   postgres_password:
@@ -83,7 +89,7 @@ services:
     environment:
       HYDRA_CONFIG: file:./hydra/.hydra.yml
       LOG_LEVEL: ${{ parameters.log_level }}
-      DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.hydra_db_name }}?sslmode=disable
+      DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.hydra_db_name }}?sslmode=prefer
       URLS_SELF_ISSUER: ${{ ingresses.frontend.url }}
       URLS_SELF_PUBLIC: ${{ ingresses.frontend.url }}
       URLS_CONSENT: ${{ ingresses.frontend.url }}/oauth2/consent
@@ -98,9 +104,9 @@ services:
       PGPORT: ${{ services.auth-db.interfaces.postgres.port }}
       PGUSER: ${{ services.auth-db.interfaces.postgres.username }}
       PGPASSWORD: ${{ services.auth-db.interfaces.postgres.password }}
-      PGSSLROOTCERT: /certs/ca.crt
-      PGSSLCERT: /certs/client.crt
-      PGSSLKEY: /certs/client.key
+      PGSSLROOTCERT: ${{ parameters.postgres_ca_filename }}
+      PGSSLCERT: ${{ parameters.postgres_cert_filename }}
+      PGSSLKEY: ${{ parameters.postgres_key_filename }}
       PGSSLROOTCERT_CONTENTS: ${{ parameters.postgres_ca }}
       PGSSLCERT_CONTENTS: ${{ parameters.postgres_cert }}
       PGSSLKEY_CONTENTS: ${{ parameters.postgres_key }}
@@ -139,7 +145,7 @@ services:
       DEFAULT_IDENTITY_SCHEMA: file:./kratos/identity.schema.json
       GITHUB_SCHEMA_MAPPER: file:./kratos/github.schema.jsonnet
       GITLAB_SCHEMA_MAPPER: file:./kratos/gitlab.schema.jsonnet
-      DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.kratos_db_name }}?sslmode=disable
+      DSN: ${{ services.auth-db.interfaces.postgres.url }}/${{ parameters.kratos_db_name }}?sslmode=prefer
       COURIER_SMTP_CONNECTION_URI: smtps://${{ parameters.smtp_username }}:${{ parameters.smtp_password }}@${{ parameters.smtp_host }}:${{ parameters.smtp_port }}
       COURIER_SMTP_FROM_ADDRESS: ${{ parameters.smtp_from_address }}
       SERVE_PUBLIC_BASE_URL: ${{ ingresses.frontend.url }}
@@ -163,9 +169,9 @@ services:
       PGPORT: ${{ services.auth-db.interfaces.postgres.port }}
       PGUSER: ${{ services.auth-db.interfaces.postgres.username }}
       PGPASSWORD: ${{ services.auth-db.interfaces.postgres.password }}
-      PGSSLROOTCERT: /certs/ca.crt
-      PGSSLCERT: /certs/client.crt
-      PGSSLKEY: /certs/client.key
+      PGSSLROOTCERT: ${{ parameters.postgres_ca_filename }}
+      PGSSLCERT: ${{ parameters.postgres_cert_filename }}
+      PGSSLKEY: ${{ parameters.postgres_key_filename }}
       PGSSLROOTCERT_CONTENTS: ${{ parameters.postgres_ca }}
       PGSSLCERT_CONTENTS: ${{ parameters.postgres_cert }}
       PGSSLKEY_CONTENTS: ${{ parameters.postgres_key }}
