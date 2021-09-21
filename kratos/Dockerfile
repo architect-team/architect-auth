@@ -7,6 +7,9 @@ RUN wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_amd64
 
 RUN mkdir -p /etc/config/kratos/
 RUN chown ory:ory /etc/config/kratos/
+
+RUN mkdir -p /certs
+
 USER ory
 
 ENTRYPOINT []

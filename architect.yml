@@ -115,9 +115,8 @@ services:
       admin: 4445
     command:
       - sh
-      - -c # TODO: fix --dangerous-force-http for remote
+      - -c
       - |
-        mkdir -p /certs
         echo "$PGSSLROOTCERT_CONTENTS" > "$PGSSLROOTCERT"
         echo "$PGSSLCERT_CONTENTS" > "$PGSSLCERT"
         echo "$PGSSLKEY_CONTENTS" > "$PGSSLKEY"
@@ -182,7 +181,6 @@ services:
       - sh
       - -c
       - |
-        mkdir -p /certs
         echo "$PGSSLROOTCERT_CONTENTS" > "$PGSSLROOTCERT"
         echo "$PGSSLCERT_CONTENTS" > "$PGSSLCERT"
         echo "$PGSSLKEY_CONTENTS" > "$PGSSLKEY"
@@ -215,10 +213,6 @@ services:
     environment:
       POSTGRESQL_USERNAME: ${{ parameters.postgres_user }}
       POSTGRESQL_PASSWORD: ${{ parameters.postgres_password }}
-      # POSTGRESQL_ENABLE_TLS: 'yes'
-      # POSTGRESQL_TLS_CERT_FILE: /opt/bitnami/postgresql/certs/server.crt
-      # POSTGRESQL_TLS_KEY_FILE: /opt/bitnami/postgresql/certs/server.key
-      # POSTGRESQL_TLS_CA_FILE: /opt/bitnami/postgresql/certs/ca.crt
 
   app:
     build:
